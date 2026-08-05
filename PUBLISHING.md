@@ -116,9 +116,14 @@ Dwa cele jednocześnie: **SVN (auto-update u klientów)** + **panel klienta w `c
 
 2. **Zbuduj + zwaliduj + skopiuj do panelu** jedną komendą:
    ```bash
-   ./scripts/build-wordpress-plugin.sh --validate-readme \
-     --copy-to-panel ~/Projects/cmp-app/public/cookiezen.zip
+   ./scripts/build-wordpress-plugin.sh --validate-readme
    ```
+
+   Kopia do `cmp-app/public/cookiezen.zip` jest **domyślna** — skrypt szuka repo panelu
+   obok tego katalogu. Gdy `cmp-app` stoi w innym miejscu, podaj `CMP_APP_PANEL_ZIP`
+   albo `--copy-to-panel <ścieżka>`; gdy świadomie nie chcesz odświeżać panelu, użyj
+   `--no-copy`. Jeśli domyślna ścieżka nie istnieje, build kończy się sukcesem, ale
+   wypisuje ostrzeżenie — panel zostaje wtedy ze starą paczką.
 
 3. **Smoke test** `dist/cookiezen.zip` na lokalnym WordPress (sekcja 4).
 

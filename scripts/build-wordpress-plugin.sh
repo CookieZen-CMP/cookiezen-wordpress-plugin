@@ -3,17 +3,27 @@
 # build-wordpress-plugin.sh
 # -------------------------
 # Buduje poprawny artefakt ZIP wtyczki CookieZen do zgloszenia w katalogu
-# WordPress.org oraz (opcjonalnie) kopiuje go do panelu klienta (cmp-app).
+# WordPress.org i kopiuje go do panelu klienta (cmp-app).
 #
 # Kroki:
 #   1. Waliduje spojnosc metadanych (readme.txt <-> cookiezen.php) i reguly WP.org.
 #   2. Kopiuje pliki wtyczki do dist/cookiezen/ (slug jako nazwa folderu — wymog WP.org).
 #   3. Pakuje do dist/cookiezen.zip (pomija .wporg-assets/, scripts/, pliki dev).
-#   4. Opcjonalnie kopiuje ZIP do panelu klienta i/lub odpytuje readme validator.
+#   4. Kopiuje ZIP do panelu klienta i/lub odpytuje readme validator.
+#
+# KOPIA DO PANELU JEST DOMYSLNA. Zrodlem prawdy dla kodu wtyczki jest to repo, a
+# cmp-app/public/cookiezen.zip to wylacznie artefakt buildu. Wczesniej kopiowanie
+# bylo opcjonalna flaga, wiec build bez niej cicho zostawial w panelu stara paczke
+# i klienci pobierali nieaktualna wtyczke — nic tego nie wykrywalo.
+#
+# Sciezka docelowa, w kolejnosci: --copy-to-panel <sciezka>, zmienna CMP_APP_PANEL_ZIP,
+# domyslnie <repo>/../cmp-app/public/cookiezen.zip.
 #
 # Uzycie:
 #   ./scripts/build-wordpress-plugin.sh
-#   ./scripts/build-wordpress-plugin.sh --copy-to-panel ~/Projects/cmp-app/public/cookiezen.zip
+#   ./scripts/build-wordpress-plugin.sh --no-copy
+#   ./scripts/build-wordpress-plugin.sh --copy-to-panel /inna/sciezka/cookiezen.zip
+#   CMP_APP_PANEL_ZIP=/inna/sciezka/cookiezen.zip ./scripts/build-wordpress-plugin.sh
 #   ./scripts/build-wordpress-plugin.sh --validate-readme
 #
 # Zwraca kod != 0, jesli ktorakolwiek walidacja nie przejdzie.
@@ -33,7 +43,13 @@ README_FILE="${ROOT_DIR}/readme.txt"
 LICENSE_FILE="${ROOT_DIR}/LICENSE.txt"
 
 # --- Flagi -----------------------------------------------------------------
-COPY_TO_PANEL=""
+# Domyslna sciezka do panelu. Repo wtyczki i cmp-app stoja obok siebie w ~/Projects.
+DEFAULT_PANEL_ZIP="${ROOT_DIR}/../cmp-app/public/${SLUG}.zip"
+COPY_TO_PANEL="${CMP_APP_PANEL_ZIP:-${DEFAULT_PANEL_ZIP}}"
+# Jawnie podana sciezka (flaga lub env) traktowana jest twardo: brak katalogu = blad.
+# Sciezka domyslna moze nie istniec na maszynie bez cmp-app, wiec tam tylko ostrzegamy.
+PANEL_PATH_EXPLICIT="false"
+[[ -n "${CMP_APP_PANEL_ZIP:-}" ]] && PANEL_PATH_EXPLICIT="true"
 VALIDATE_README="false"
 
 while [[ $# -gt 0 ]]; do
@@ -44,7 +60,12 @@ while [[ $# -gt 0 ]]; do
         echo "Blad: --copy-to-panel wymaga sciezki docelowej." >&2
         exit 2
       fi
+      PANEL_PATH_EXPLICIT="true"
       shift 2
+      ;;
+    --no-copy)
+      COPY_TO_PANEL=""
+      shift
       ;;
     --validate-readme)
       VALIDATE_README="true"
@@ -272,16 +293,24 @@ if [[ "${VALIDATE_README}" == "true" ]]; then
   fi
 fi
 
-# Kopia do panelu klienta (cmp-app)
+# Kopia do panelu klienta (cmp-app) — domyslna, patrz naglowek pliku.
 if [[ -n "${COPY_TO_PANEL}" ]]; then
   info "Kopiowanie ZIP-a do panelu klienta"
   PANEL_DIR="$(dirname "${COPY_TO_PANEL}")"
   if [[ -d "${PANEL_DIR}" ]]; then
     cp "${ZIP_PATH}" "${COPY_TO_PANEL}"
     pass "Skopiowano do: ${COPY_TO_PANEL}"
-  else
+  elif [[ "${PANEL_PATH_EXPLICIT}" == "true" ]]; then
     fail "Katalog docelowy nie istnieje: ${PANEL_DIR}"
+  else
+    # Domyslna sciezka nie istnieje: maszyna bez cmp-app obok. Nie wywalamy builda,
+    # ale mowimy o tym glosno — cicha cisza byla wlasnie zrodlem rozjazdu artefaktu.
+    printf "  ${C_INFO}[UWAGA]${C_RST} Pominieto kopie do panelu: brak katalogu %s\n" "${PANEL_DIR}"
+    printf "  ${C_INFO}       ${C_RST} Panel w cmp-app zostanie ze STARA paczka. Podaj --copy-to-panel\n"
+    printf "  ${C_INFO}       ${C_RST} albo CMP_APP_PANEL_ZIP, jesli cmp-app stoi w innym miejscu.\n"
   fi
+else
+  printf "  ${C_INFO}[INFO]${C_RST} --no-copy: panel w cmp-app zostaje z poprzednia paczka\n"
 fi
 
 # =====================================================================
