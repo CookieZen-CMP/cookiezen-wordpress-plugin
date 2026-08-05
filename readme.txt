@@ -4,7 +4,7 @@ Tags: cookie banner, cookie consent, cookie notice, GDPR, privacy
 Requires at least: 5.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -156,6 +156,9 @@ Analogiczny wpis zapisywany jest w `localStorage` przeglądarki (`cmp:<site_key>
 3. Panel CookieZen — statystyki akceptacji zgód i lista wykrytych cookies.
 
 == Changelog ==
+
+= 1.0.3 =
+* [Fix] Integracja z WP Consent API działa teraz także po stronie PHP. Wtyczka deklaruje tryb zgody `optin` przez filtr `wp_get_consent_type`, dzięki czemu funkcja `wp_has_consent()` respektuje decyzję użytkownika również w kodzie serwerowym. Wcześniej działała wyłącznie warstwa JavaScript, a sprawdzenia po stronie PHP przepuszczały skrypty mimo odmowy zgody.
 
 = 1.0.2 =
 * Pierwsze wydanie w oficjalnym katalogu WordPress.org (wcześniejsze wersje dystrybuowane ręcznie jako plik ZIP z panelu CookieZen).

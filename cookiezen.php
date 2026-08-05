@@ -3,7 +3,7 @@
  * Plugin Name: CookieZen
  * Plugin URI: https://cookiezen.pl/wordpress
  * Description: Integracja z systemem zarządzania zgodami CookieZen. Wpisz Site Key, a my zajmiemy się resztą.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Semavo Solutions Sp. z o.o.
  * Author URI: https://cookiezen.pl
  * Requires at least: 5.5
@@ -90,6 +90,32 @@ function cookiezen_options_page_html() {
     </div>
     <?php
 }
+
+/**
+ * WP Consent API: deklaracja trybu zgody po stronie PHP.
+ *
+ * Bez tego filtru `wp_get_consent_type()` zwraca pustke, a `wp_has_consent()` wpada
+ * wtedy w pierwsza galez i zwraca `true` dla KAZDEJ kategorii — niezaleznie od cookies
+ * `wp_consent_*`, ktore CookieZen poprawnie zapisuje z przegladarki. Skutek: wtyczki
+ * sprawdzajace zgode po stronie serwera przepuszczaly skrypty mimo odmowy uzytkownika.
+ * Zrodlo tej logiki: wp-consent-api, inc/api-functions.php, funkcja wp_has_consent().
+ *
+ * Sciezka JS byla i jest poprawna — loader ustawia `window.wp_consent_type` w <head>,
+ * a JS-owe `wp_has_consent()` czyta ta zmienna przed czymkolwiek innym. Ten filtr
+ * domyka wylacznie warstwe PHP.
+ *
+ * Rejestrujemy bezwarunkowo, bez `is_plugin_active()`: ta funkcja zyje w
+ * wp-admin/includes/plugin.php i nie jest gwarantowana na frontzie, a filtr bez
+ * wtyczki WP Consent API nigdy nie zostanie wywolany, wiec jest bezkosztowy.
+ *
+ * UWAGA: przy pierwszym zadaniu, zanim JS zapisze cookies, PHP zwroci `false` dla
+ * wszystkich kategorii, takze `functional`. To zachowanie samego WP Consent API
+ * w trybie opt-in (brak cookie = brak zgody), identyczne u innych CMP-ow.
+ */
+function cookiezen_wp_consent_type() {
+    return 'optin';
+}
+add_filter( 'wp_get_consent_type', 'cookiezen_wp_consent_type' );
 
 /**
  * Script MUSI byc synchroniczny (bez async/defer) — loader instaluje MutationObserver
