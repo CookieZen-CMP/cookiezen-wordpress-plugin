@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: CookieZen
- * Plugin URI: https://cookiezen.pl/wordpress
- * Description: Integracja z systemem zarządzania zgodami CookieZen. Wpisz Site Key, a my zajmiemy się resztą.
- * Version: 1.0.3
+ * Plugin URI: https://cookiezen.pl/?utm_source=wordpress&utm_medium=plugin&utm_campaign=plugin_uri
+ * Description: A consent management platform (CMP) for handling visitor consent. Automatic scanner, Google Consent Mode v2, full cookie banner customization and regulatory compliance in one place.
+ * Version: 1.0.4
  * Author: Semavo Solutions Sp. z o.o.
  * Author URI: https://cookiezen.pl
  * Requires at least: 5.5
- * Tested up to: 7.0
+ * Tested up to: 7.1.1
  * Requires PHP: 7.4
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -18,6 +18,25 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+/**
+ * Tlumaczenia dolaczone do wtyczki.
+ *
+ * Dla wtyczki serwowanej z katalogu WordPress.org to wywolanie jest zbedne, bo
+ * tlumaczenia z translate.wordpress.org laduja w WP_LANG_DIR i mechanizm
+ * just-in-time znajduje je sam. My mamy drugi kanal: ZIP pobierany przez klienta
+ * z panelu CookieZen. Taka instalacja nie pochodzi z katalogu, wiec nie ma dla
+ * niej niczego w WP_LANG_DIR, a just-in-time nie zaglada do `languages/` wtyczki.
+ * Bez tego wywolania dolaczone `cookiezen-pl_PL.mo` nie zadziala u nikogo, kto
+ * zainstalowal wtyczke recznie, i panel pokaze angielski zamiast polskiego.
+ *
+ * Hook `init`, nie `plugins_loaded`: od WordPressa 6.7 ladowanie domeny
+ * wczesniej niz na `init` konczy sie notice o zbyt wczesnym wywolaniu.
+ */
+function cookiezen_load_textdomain() {
+    load_plugin_textdomain( 'cookiezen', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+}
+add_action( 'init', 'cookiezen_load_textdomain' );
 
 function cookiezen_register_settings() {
     register_setting(
@@ -37,7 +56,7 @@ function cookiezen_validate_site_key( $input ) {
         add_settings_error(
             'cookiezen_site_key',
             'cookiezen_site_key_error',
-            'Site Key ma nieprawidłowy format. Dozwolone są tylko litery, cyfry i podkreślniki.',
+            __( 'The Site Key has an invalid format. Only letters, digits and underscores are allowed.', 'cookiezen' ),
             'error'
         );
         return get_option( 'cookiezen_site_key' );
@@ -58,7 +77,7 @@ function cookiezen_add_options_page() {
 add_action( 'admin_menu', 'cookiezen_add_options_page' );
 
 function cookiezen_add_action_links( $links ) {
-    $settings_link = '<a href="options-general.php?page=cookiezen">Ustawienia</a>';
+    $settings_link = '<a href="options-general.php?page=cookiezen">' . esc_html__( 'Settings', 'cookiezen' ) . '</a>';
     array_unshift( $links, $settings_link );
     return $links;
 }
@@ -80,12 +99,12 @@ function cookiezen_options_page_html() {
                 <tr valign="top">
                     <th scope="row">Site Key</th>
                     <td>
-                        <input type="text" name="cookiezen_site_key" value="<?php echo esc_attr( get_option( 'cookiezen_site_key' ) ); ?>" class="regular-text" placeholder="np. site_rkzxyh40" />
-                        <p class="description">Wprowadź swój klucz strony (site_key) z panelu CookieZen.</p>
+                        <input type="text" name="cookiezen_site_key" value="<?php echo esc_attr( get_option( 'cookiezen_site_key' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'e.g. site_rkzxyh40', 'cookiezen' ); ?>" />
+                        <p class="description"><?php echo esc_html__( 'Enter the Site Key for your site from the CookieZen panel.', 'cookiezen' ); ?></p>
                     </td>
                 </tr>
             </table>
-            <?php submit_button( 'Zapisz zmiany' ); ?>
+            <?php submit_button(); ?>
         </form>
     </div>
     <?php
@@ -129,8 +148,8 @@ function cookiezen_inject_script() {
         return;
     }
 
-    $safe_key = urlencode( $site_key );
-    echo '<script src="https://cz-cdn.com/api/cmp/loader?site_key=' . $safe_key . '"></script>' . "\n";
+    $loader_url = add_query_arg( 'site_key', $site_key, 'https://cz-cdn.com/api/cmp/loader' );
+    echo '<script src="' . esc_url( $loader_url ) . '"></script>' . "\n";
 }
 /*
  * Priorytet `1` (nie -9999): wpada PO `<meta charset>` / `<title>` (wymog HTML5 dla

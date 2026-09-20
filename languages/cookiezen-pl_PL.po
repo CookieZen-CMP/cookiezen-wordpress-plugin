@@ -1,0 +1,42 @@
+# Polish translation for the CookieZen plugin.
+# Copyright (C) 2026 Semavo Solutions Sp. z o.o.
+# This file is distributed under the same license as the CookieZen plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: CookieZen 1.0.4\n"
+"Report-Msgid-Bugs-To: https://cookiezen.pl\n"
+"POT-Creation-Date: 2026-09-20 18:47+0200\n"
+"PO-Revision-Date: 2026-09-20 00:00+0000\n"
+"Last-Translator: CookieZen <hello@cookiezen.pl>\n"
+"Language-Team: Polish <hello@cookiezen.pl>\n"
+"Language: pl_PL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+
+#: cookiezen.php:59
+msgid ""
+"The Site Key has an invalid format. Only letters, digits and underscores are "
+"allowed."
+msgstr ""
+"Site Key ma nieprawidłowy format. Dozwolone są tylko litery, cyfry i "
+"podkreślniki."
+
+#: cookiezen.php:80
+msgid "Settings"
+msgstr "Ustawienia"
+
+#: cookiezen.php:102
+msgid "e.g. site_rkzxyh40"
+msgstr "np. site_rkzxyh40"
+
+#: cookiezen.php:103
+msgid "Enter the Site Key for your site from the CookieZen panel."
+msgstr "Wprowadź Site Key swojej strony z panelu CookieZen."
+
+#. Description of the plugin
+#: cookiezen.php
+msgid "A consent management platform (CMP) for handling visitor consent. Automatic scanner, Google Consent Mode v2, full cookie banner customization and regulatory compliance in one place."
+msgstr "Platforma CMP do zarządzania zgodami użytkowników. Automatyczny skaner, Google Consent Mode v2, pełna personalizacja banera cookie i zgodność z przepisami w jednym miejscu."

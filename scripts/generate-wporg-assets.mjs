@@ -4,7 +4,8 @@
  * Rasteryzuje logo marki (public/SygnetAlter.svg + public/CookieZenBlack.svg)
  * do plikow PNG wymaganych przez katalog WP.org (SVN /assets/):
  *   - icon-256x256.png, icon-128x128.png
- *   - banner-772x250.png, banner-1544x500.png (retina 2x)
+ *   - banner-772x250.png, banner-1544x500.png (retina 2x), po jednej parze
+ *     na kazdy wpis w BANNER_LOCALES
  *
  * Wymaga pakietu `sharp` (rasteryzacja SVG). Uruchamiac z srodowiska Node,
  * ktore ma zainstalowany sharp, np.:
@@ -68,32 +69,101 @@ function iconSvg(size) {
   </svg>`
 }
 
-// --- BANNER: light background, wordmark + tagline, green accent ---
-function bannerSvg(W, H) {
+/*
+ * Warianty jezykowe banera. Katalog WP.org serwuje plik z sufiksem lokalizacji
+ * odwiedzajacemu w tym jezyku, a plik bez sufiksu wszystkim pozostalym, wiec
+ * domyslny wariant jest angielski, tak jak readme.txt. Sufiks '' MUSI zostac
+ * pierwszy: to on daje plik bez sufiksu, ktory katalog traktuje jako domyslny.
+ */
+const BANNER_LOCALES = [
+  {
+    suffix: '',
+    tagline: 'Cookie consent management without the stress',
+    pills: ['Consent Mode v2', 'GDPR and ePrivacy', 'Cookie scanner']
+  },
+  {
+    suffix: '-pl_PL',
+    tagline: 'Zarządzanie zgodami cookies bez stresu',
+    pills: ['Consent Mode v2', 'RODO i ePrivacy', 'Skaner cookies']
+  }
+]
+
+const FONT = 'Helvetica, Arial, sans-serif'
+
+/*
+ * Litera C wordmarku zaczyna sie na x=57.84, a nie na krawedzi viewBoxa. Kadr
+ * musi zaczac sie dokladnie tam, inaczej nazwa jest wcieta wobec tagline'u
+ * i plakietek, ktore startuja rowno od `textX`.
+ */
+const LOGO_CROP_X = 57.84
+const LOGO_CROP_W = 193.96 - LOGO_CROP_X
+
+/* Margines plytki pod sygnetem jako ulamek jego wymiaru, jak w karcie OG. */
+const PLATE_PADDING = 0.07
+
+/*
+ * BANNER: gradient, plytka pod sygnetem i stopka sa przeniesione z generatora
+ * karty OG (cmp-app, scripts/generate-og-image.mjs), zeby obie powierzchnie
+ * marki mowily jednym jezykiem. Zmiana kolorow tla albo plytki powinna isc
+ * rownolegle w obu plikach.
+ */
+function bannerSvg(W, H, locale) {
   const s = W / 772                              // scale factor from base design
-  const logoW = 300 * s
-  const logoH = logoW * (53.09 / 193.96)
-  const logoX = 56 * s
-  const logoY = 66 * s
-  const tagY = (logoY + logoH + 40 * s)
-  const tagSize = 24 * s
-  const sygH = 250 * s
+
+  const sygH = 160 * s
   const sygW = sygH * (41.55 / 44.08)
-  const sygX = W - sygW * 0.80          // ~20% cropped off the right edge
+  const plateW = sygW * (1 + PLATE_PADDING * 2)
+  const plateH = sygH * (1 + PLATE_PADDING * 2)
+  const plateX = 32 * s
+  const plateY = (H - plateH) / 2
+
+  const textX = plateX + plateW + 40 * s
+  const logoW = 212 * s
+  const logoH = logoW * (53.09 / LOGO_CROP_W)
+  const taglineSize = 17 * s
+  const pillH = 30 * s
+  const blockH = logoH + 16 * s + taglineSize + 26 * s + pillH
+  const logoY = (H - blockH) / 2
+
+  /*
+   * Kadr wordmarku niesie pusty pas pod literami, bo glify koncza sie mniej
+   * wiecej na 68 procentach wysokosci viewBoxa. Odstep optyczny jest wiec
+   * wiekszy niz liczbowy, wiec odjecie `18 * s` w linii nizej podnosi dwie
+   * dolne linie o te roznice, nie ruszajac logo ani osi calego bloku.
+   */
+  const taglineBaseline = logoY + logoH + 16 * s + taglineSize - 18 * s
+  const pillY = taglineBaseline + 26 * s
+
+  let cx = textX
+  const pills = locale.pills
+    .map((label) => {
+      const w = (label.length * 7.3 + 30) * s
+      const el = `<rect x="${cx}" y="${pillY}" width="${w}" height="${pillH}" rx="${pillH / 2}" fill="#FFFFFF"/>
+    <text x="${cx + w / 2}" y="${pillY + pillH * 0.66}" font-family="${FONT}" font-size="${14 * s}" font-weight="600" fill="${BLUE}" text-anchor="middle">${label}</text>`
+      cx += w + 10 * s
+      return el
+    })
+    .join('\n    ')
+
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
     <defs>
-      <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#FFFFFF"/>
-        <stop offset="1" stop-color="#EEF5F1"/>
+      <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${BLUE}"/>
+        <stop offset="100%" stop-color="#0C1422"/>
       </linearGradient>
+      <radialGradient id="glow" cx="85%" cy="100%" r="60%">
+        <stop offset="0%" stop-color="${GREEN}" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="${GREEN}" stop-opacity="0"/>
+      </radialGradient>
     </defs>
     <rect width="${W}" height="${H}" fill="url(#bg)"/>
-    <circle cx="${W * 1.02}" cy="${H * 0.5}" r="${H * 0.92}" fill="${GREEN}" opacity="0.14"/>
-    <circle cx="${W * 0.95}" cy="${H * 0.5}" r="${H * 0.5}" fill="${BLUE}" opacity="0.06"/>
-    <svg x="${sygX}" y="${(H - sygH) / 2}" width="${sygW}" height="${sygH}" viewBox="0 0 41.55 44.08" opacity="0.92">${sygnet('bs')}</svg>
-    <svg x="${logoX}" y="${logoY}" width="${logoW}" height="${logoH}" viewBox="0 0 193.96 53.09">${wordmark()}</svg>
-    <text x="${logoX + 2 * s}" y="${tagY}" font-family="Helvetica, Arial, sans-serif" font-size="${tagSize}" font-weight="600" fill="${BLUE}">Zgody cookie, RODO i Consent Mode v2</text>
-    <text x="${logoX + 2 * s}" y="${tagY + 30 * s}" font-family="Helvetica, Arial, sans-serif" font-size="${18 * s}" fill="${NAVY}" opacity="0.7">Polska platforma zarzadzania zgodami dla WordPress</text>
+    <rect width="${W}" height="${H}" fill="url(#glow)"/>
+    <rect x="${plateX}" y="${plateY}" width="${plateW}" height="${plateH}" rx="${plateW * 0.13}" fill="#F8FAFC"/>
+    <svg x="${plateX + (plateW - sygW) / 2}" y="${plateY + (plateH - sygH) / 2}" width="${sygW}" height="${sygH}" viewBox="0 0 41.55 44.08">${sygnet('bs' + W)}</svg>
+    <svg x="${textX}" y="${logoY}" width="${logoW}" height="${logoH}" viewBox="${LOGO_CROP_X} 0 ${LOGO_CROP_W} 53.09">${wordmark().replace(`fill="${NAVY}"`, 'fill="#FFFFFF"')}</svg>
+    <text x="${textX}" y="${taglineBaseline}" font-family="${FONT}" font-size="${taglineSize}" fill="#CBD5E1">${locale.tagline}</text>
+    ${pills}
+    <text x="${W - 26 * s}" y="${H - 18 * s}" font-family="${FONT}" font-size="${14 * s}" font-weight="500" fill="${GREEN}" text-anchor="end">cookiezen.pl</text>
   </svg>`
 }
 
@@ -104,6 +174,9 @@ async function render(svg, file) {
 
 await render(iconSvg(256), 'icon-256x256.png')
 await render(iconSvg(128), 'icon-128x128.png')
-await render(bannerSvg(772, 250), 'banner-772x250.png')
-await render(bannerSvg(1544, 500), 'banner-1544x500.png')
+
+for (const locale of BANNER_LOCALES) {
+  await render(bannerSvg(772, 250, locale), `banner-772x250${locale.suffix}.png`)
+  await render(bannerSvg(1544, 500, locale), `banner-1544x500${locale.suffix}.png`)
+}
 console.log('done')

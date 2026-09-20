@@ -2,172 +2,140 @@
 Contributors: cookiezen
 Tags: cookie banner, cookie consent, cookie notice, GDPR, privacy
 Requires at least: 5.5
-Tested up to: 7.0
+Tested up to: 7.1.1
 Requires PHP: 7.4
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Baner zgód cookie i CMP dla RODO oraz Google Consent Mode v2. Automatyczne blokowanie skryptów, skaner cookies i dowody zgód.
+Cookie consent banner and GDPR consent platform with Google Consent Mode v2, an automatic cookie scanner and stored consent records.
 
 == Description ==
 
-CookieZen to polska platforma zarządzania zgodami (Consent Management Platform, CMP), która w kilka minut dodaje do Twojej witryny WordPress w pełni konfigurowalny baner cookie zgodny z RODO, dyrektywą ePrivacy oraz CCPA.
+CookieZen manages the consent of everyone who visits your site, sends the full set of Consent Mode signals to Google and Microsoft, scans your pages for cookies and stores every consent decision in case of an audit. Setting it up takes a few minutes.
 
-Wtyczka łączy Twoją stronę z kontem CookieZen za pomocą jednego klucza (Site Key). Cała logika — skanowanie cookies, klasyfikacja trackerów, blokowanie skryptów przed zgodą, zapis dowodów zgód i sygnały Google Consent Mode v2 — działa po stronie usługi CookieZen, więc wtyczka pozostaje lekka i szybka.
+The plugin connects your site to a CookieZen account with a single key (Site Key). All of the logic, meaning the cookie scanner, tracker classification, Consent Mode signals, the consent register and the statistics, runs on the CookieZen service, so the plugin itself stays small. You change the look and the wording of the banner in the panel, without touching your theme and without pasting anything into your templates.
 
-CookieZen to rozwiązanie stworzone z myślą o polskim rynku: polski panel, polska dokumentacja, polski support, faktura VAT i cennik w złotówkach. Sprawdza się zarówno na blogu, jak i w sklepie WooCommerce czy na dużej stronie firmowej.
+= What makes CookieZen different =
 
-**Dlaczego CookieZen**
+**Automatic cookie scanner**
+CookieZen crawls the key pages of your site and detects cookies and tracking pixels, including the ones that only fire after consent is given. The scan repeats every 30 days, so the list does not fall behind the changes you make to the site.
 
-* **Wdrożenie w 5 minut** — instalujesz wtyczkę, wklejasz Site Key z panelu CookieZen i baner jest od razu aktywny. Bez kodowania.
-* **Automatyczny skaner cookies** — CookieZen przechodzi po kluczowych podstronach i wykrywa cookies oraz piksele śledzące (Google Analytics, Meta Pixel, TikTok), także te uruchamiane dopiero po zgodzie. Skan powtarza się automatycznie co 30 dni.
-* **Blokowanie przed zgodą** — skrypty śledzące są blokowane, zanim użytkownik wyrazi zgodę — dokładnie tak, jak wymaga RODO.
-* **Google Consent Mode v2** — wszystkie wymagane sygnały (`ad_storage`, `analytics_storage`, `ad_user_data`, `ad_personalization`) wysyłane są zanim załaduje się Google Tag Manager.
-* **Bezpieczny dla e-commerce** — bramki płatności (Przelewy24, Stripe, PayPal), widgety dostawców (InPost, Furgonetka), reCAPTCHA i formularze działają zawsze. CookieZen blokuje tylko znane trackery, nie rozbija checkoutów.
-* **Zero danych osobowych** — adresy IP są nieodwracalnie hashowane, nie przechowujemy danych osobowych odwiedzających.
-* **Dowody zgód (Consent Proof)** — każda decyzja użytkownika rejestrowana z metadanymi (data, czas, kraj, język) — gotowe na kontrolę UODO.
-* **Optymalizacja pod SEO** — boty wyszukiwarek dostają minimalną wersję skryptu bez interfejsu, więc baner nie psuje Core Web Vitals ani pozycjonowania.
+**Google Consent Mode v2 with no configuration**
+Every required signal reaches Google tags before they start collecting data. url_passthrough and ads_data_redaction are supported as well, so Google Ads can still model conversions when a visitor declines cookies. You do not have to write your own gtag calls or change anything in Google Tag Manager.
 
-== Features ==
+**Microsoft UET Consent Mode and consent in Clarity**
+Consent Mode for Microsoft Universal Event Tracking (UET) is supported, so paid campaigns in Microsoft Advertising measure conversions in line with the visitor's decision. The correct consent signal is passed to Microsoft Clarity too. There is nothing to connect and no code to add by hand.
 
-**Zarządzanie zgodami**
+**WP Consent API integration**
+The WP Consent API plugin does not collect consent itself, it only exposes it to other plugins, so without a consent manager feeding it, plugins that follow the standard behave as if consent had been granted. CookieZen takes that role automatically: the visitor's decision reaches compatible plugins such as WooCommerce, Google Site Kit, WP Statistics or Pixel Manager, both in JavaScript and in PHP code. There is nothing to switch on.
 
-* Baner zgód z opcjami Akceptuj / Odrzuć / Ustawienia dla RODO i CCPA.
-* Automatyczne blokowanie skryptów i cookies niezbędnych do momentu wyrażenia zgody.
-* Centrum preferencji — użytkownik zarządza zgodami wg kategorii (analityka, marketing, preferencje).
-* Rejestr zgód z pełnymi metadanymi (Consent Proof) na potrzeby audytu i kontroli UODO.
-* Google Consent Mode v2 — sygnały wysyłane przed załadowaniem GTM.
-* Wsparcie dla Microsoft Advertising (Bing Ads) i Microsoft Clarity.
+**Consent records and statistics**
+Every decision is stored with its date, time, country and language, which gives you proof of consent in case of an audit. IP addresses are irreversibly hashed, so no personal data about the people visiting your site is kept. The panel also shows your consent acceptance rate, meaning how much of your traffic actually reaches your analytics and your ads.
 
-**Integracja z WordPress**
+**Several domains on one plan**
+Running more than one site, or a shop next to a company page? You manage them from a single panel within one plan, without separate accounts and separate fees.
 
-* **Automatyczna integracja z WP Consent API** — CookieZen pełni rolę menedżera zgód, a zgodne wtyczki (WooCommerce, Google Site Kit, WP Statistics, Pixel Manager) automatycznie respektują wybór dokonany w banerze, bez pisania kodu. Integracja aktywuje się sama, gdy na stronie działa wtyczka [WP Consent API](https://wordpress.org/plugins/wp-consent-api/).
-* Działa z Google Tag Manager i każdym innym CMS-em lub builderem stron.
+**A Polish product**
+A Polish company, a panel and documentation in Polish, and support in Polish. We know this market and we issue a VAT invoice in PLN.
 
-**Personalizacja i wydajność**
+= Pricing =
 
-* Pełna personalizacja banera (kolory, teksty, pozycja) z poziomu panelu CookieZen.
-* Loader ładowany z serwerów Edge (CDN), skompresowany do kilku kilobajtów.
-* Wielojęzyczność — baner automatycznie w języku przeglądarki użytkownika.
-
-**Skaner i statystyki**
-
-* Automatyczny skaner cookies z powtórką co 30 dni.
-* Statystyki akceptacji zgód w panelu (ilu zaakceptowało, odrzuciło, wybrało kategorie).
-* Jedno konto, wiele domen — zarządzanie wszystkimi stronami z jednego panelu.
-
-== Premium Features ==
-
-CookieZen działa w modelu freemium. Plan Free (do 1 000 sesji miesięcznie) jest bezpłatny i bezterminowy. Wyższe plany odblokowują większe limity sesji i dodatkowe możliwości. [Zobacz cennik i porównaj plany](https://cookiezen.pl/?utm_source=wordpress&utm_medium=plugin&utm_campaign=premium_features#cennik).
-
-* **Starter** — do 50 000 sesji / miesiąc.
-* **Pro** — do 150 000 sesji / miesiąc.
-* **Business** — do 400 000 sesji / miesiąc, rozliczenie nadwyżek w modelu pay-as-you-go.
-
-Wszystkie plany obejmują automatyczny skaner, dowody zgód, Google Consent Mode v2 oraz polski support.
+The plugin is free. CookieZen plans differ only in their session limit, not in what they include: the cookie scanner, Consent Mode v2, the consent register and the statistics are all there from day one, including on the permanent Free plan for up to 1,000 sessions per month. Paid plans start at 49 PLN net per month for 50,000 sessions, you can change or cancel them at any time, and signing up does not require card details.
 
 == Installation ==
 
-= Instalacja z katalogu WordPress =
+1. Install and activate the CookieZen plugin.
+2. Create an account at [cookiezen.pl](https://cookiezen.pl/register?utm_source=wordpress&utm_medium=plugin&utm_campaign=installation) and add your domain.
+3. Copy the Site Key from the Integration tab in the CookieZen panel.
+4. Go to Settings > CookieZen, paste the Site Key and save the changes.
 
-1. W panelu WordPress przejdź do **Wtyczki → Dodaj wtyczkę**.
-2. Wyszukaj „CookieZen" i kliknij **Zainstaluj**, a następnie **Włącz**.
+The banner appears on every page of the site and does not require adding anything to your theme.
 
-= Instalacja ręczna =
+= How to check that it works =
 
-1. Pobierz plik ZIP wtyczki.
-2. W panelu WordPress przejdź do **Wtyczki → Dodaj wtyczkę → Wyślij wtyczkę na serwer**.
-3. Wybierz pobrany plik ZIP, kliknij **Zainstaluj teraz**, a po instalacji **Włącz wtyczkę**.
+Open your site in a private browser window. The banner should appear on the first visit, and once you make a choice it should disappear and stay away on the following page views. The decision shows up in the statistics in the CookieZen panel within a few minutes.
 
-= Konfiguracja (Site Key) =
-
-1. Załóż konto na [cookiezen.pl](https://cookiezen.pl/?utm_source=wordpress&utm_medium=plugin&utm_campaign=installation) i dodaj swoją domenę.
-2. Skopiuj **Site Key** z panelu CookieZen (zakładka Integracja).
-3. W panelu WordPress przejdź do **Ustawienia → CookieZen**, wklej Site Key i zapisz.
-4. Baner zgód pojawi się na Twojej stronie automatycznie.
+If the banner does not appear, check that the Site Key is saved in the plugin settings and make sure the domain added in the CookieZen panel matches the address of your site.
 
 == Frequently Asked Questions ==
 
-= Skąd wziąć Site Key? =
+= Where do I find the Site Key? =
 
-Site Key znajdziesz w panelu CookieZen, w zakładce Integracja swojej domeny. Załóż darmowe konto na cookiezen.pl, dodaj domenę i skopiuj klucz.
+The Site Key is in the CookieZen panel, in the Integration tab of your domain. Create a free account at cookiezen.pl, add your domain and copy the key.
 
-= Czy wtyczka jest darmowa? =
+= Is the plugin free? =
 
-Tak. Plan Free (do 1 000 sesji miesięcznie) jest bezpłatny i bezterminowy. Wyższe plany rozszerzają limity sesji — szczegóły w cenniku na cookiezen.pl.
+Yes, the plugin is free. It needs an account in the CookieZen service, which has a permanent Free plan for up to 1,000 sessions per month. Higher plans raise the session limit.
 
-= Czy CookieZen spowalnia stronę? =
+= Does CookieZen work with the WP Consent API? =
 
-Nie. Loader jest skompresowany do kilku kilobajtów i ładuje się z serwerów Edge (CDN). Boty wyszukiwarek dostają minimalną wersję bez interfejsu, więc baner nie wpływa na Core Web Vitals ani na pozycjonowanie.
+Yes, automatically. When the [WP Consent API](https://wordpress.org/plugins/wp-consent-api/) plugin is active, CookieZen acts as the consent manager and passes the visitor's decision to compatible plugins, including the checks made in PHP. There is nothing to configure.
 
-= Czy CookieZen integruje się z WP Consent API? =
+= Does the plugin work without an internet connection? =
 
-Tak. Gdy na stronie aktywna jest wtyczka [WP Consent API](https://wordpress.org/plugins/wp-consent-api/), CookieZen automatycznie pełni rolę menedżera zgód. Wybór użytkownika w banerze (analityka, marketing, preferencje) jest przekazywany do zgodnych wtyczek (WooCommerce, Google Site Kit, WP Statistics, Pixel Manager), które respektują go bez dodatkowej konfiguracji. Integracja jest automatyczna — nie ma nic do włączania.
+No. CookieZen is a service, a consent management platform. The banner, the cookie classification and the consent register rely on CookieZen servers, so an active account and a network connection are required.
 
-= Czy wtyczka działa bez połączenia z internetem? =
+= Can I change how the banner looks and what it says? =
 
-Nie. CookieZen jest usługą (Consent Management Platform) — baner, klasyfikacja cookies i zapis zgód działają w oparciu o serwery CookieZen. Wymagane jest aktywne konto i połączenie z internetem.
+Yes, entirely from the CookieZen panel. You can change the colors, the logo, the layout, the wording and your own CSS. The changes reach your site without updating the plugin.
 
-= Czy sama instalacja wtyczki zapewnia zgodność z RODO? =
+= Does installing the plugin make my site GDPR compliant? =
 
-Nie. Instalacja wtyczki to pierwszy krok. Zgodność zależy od poprawnej konfiguracji banera, sklasyfikowania cookies i dopasowania treści do faktycznych praktyk na Twojej stronie. Zapoznaj się z uwagą poniżej.
+No. Installing it is the first step. Compliance depends on configuring the banner correctly, classifying the cookies that were found, and on whether your policies describe what actually happens on your site.
+
+Scripts that are meant to wait for consent also have to be marked in your page code or gated by consent in your tag manager. The CookieZen documentation covers this.
 
 == External services ==
 
-Ta wtyczka łączy Twoją stronę z usługą CookieZen, aby dostarczyć baner zgód i zarządzać zgodami użytkowników. Bez tego połączenia baner nie może działać — CookieZen jest platformą typu Consent Management Platform (usługą SaaS).
+This plugin connects your site to the CookieZen service in order to deliver the consent banner and manage the consent of your visitors. Without that connection the banner cannot work, because CookieZen is a consent management platform delivered as a service.
 
-**Do czego dochodzi połączenie**
+**What the connection is**
 
-Wtyczka wstrzykuje na Twojej stronie skrypt (loader) z adresu:
+The plugin inserts a loader script on your site from this address:
 
-`https://cz-cdn.com/api/cmp/loader?site_key=TWOJ_SITE_KEY`
+`https://cz-cdn.com/api/cmp/loader?site_key=YOUR_SITE_KEY`
 
-Skrypt ładuje się przy każdej wizycie na stronie, ponieważ baner zgód musi zainicjować się i zablokować skrypty śledzące zanim uruchomią się inne wtyczki marketingowe.
+The script loads on every visit, because the banner has to initialise and pass the consent signals before your analytics and marketing tools start.
 
-**Jakie dane są przesyłane**
+**What data is sent**
 
-* **Site Key** — identyfikator Twojej strony w systemie CookieZen (podany przez Ciebie w ustawieniach wtyczki).
-* Standardowe nagłówki żądania HTTP przeglądarki odwiedzającego (adres IP, User-Agent, Referer), niezbędne do dostarczenia loadera. Adresy IP są nieodwracalnie hashowane po stronie CookieZen i nie są przechowywane w formie umożliwiającej identyfikację.
+* The Site Key, which is the identifier of your site in the CookieZen system, entered by you in the plugin settings.
+* The standard HTTP request headers of the visitor's browser (IP address, User-Agent, Referer), needed to deliver the script. IP addresses are irreversibly hashed on the CookieZen side and are not stored in a form that allows identification.
 
-**Dlaczego usługa zewnętrzna jest niezbędna**
+**Why the external service is required**
 
-Cała logika CMP — automatyczny skaner cookies, klasyfikacja trackerów, geolokalizacja dla różnych ram prawnych, sygnały Google Consent Mode v2 oraz zapis dowodów zgód — realizowana jest przez backend CookieZen.
+All of the platform logic, meaning the automatic cookie scanner, tracker classification, geolocation for different legal frameworks, Google Consent Mode v2 signals and the register of consent records, runs on the CookieZen backend.
 
-Usługa jest dostarczana przez Semavo Solutions Sp. z o.o.
-Polityka prywatności: https://cookiezen.pl/polityka-prywatnosci
-Polityka cookies: https://cookiezen.pl/polityka-cookies
-Regulamin: https://cookiezen.pl/regulamin
+The service is provided by Semavo Solutions Sp. z o.o.
+Privacy policy: https://cookiezen.pl/polityka-prywatnosci
+Cookie policy: https://cookiezen.pl/polityka-cookies
+Terms of service: https://cookiezen.pl/regulamin
 
-== Ciasteczka tworzone przez CookieZen ==
+== Cookies set by CookieZen ==
 
-Wtyczka (poprzez loader) zapisuje wyłącznie ciasteczka niezbędne do zapamiętania decyzji użytkownika o zgodach:
+The plugin sets a single cookie, `cmp_consent_<site_key>`, which stores the visitor's choice across the analytics, marketing and preferences categories. The cookie lasts one year and contains no personal data.
 
-* `cmp_consent_<site_key>` — przechowuje wybór użytkownika dotyczący zgód (kategorie: analityka, marketing, preferencje). Ważność: 1 rok. Nie zawiera danych osobowych.
-
-Analogiczny wpis zapisywany jest w `localStorage` przeglądarki (`cmp:<site_key>`), aby przy powrocie na stronę nie wyświetlać banera ponownie.
-
-= UWAGA: SAMA INSTALACJA TEJ WTYCZKI NIE SPRAWIA AUTOMATYCZNIE, ŻE TWOJA STRONA JEST ZGODNA Z RODO ORAZ CCPA. KAŻDA STRONA UŻYWA INNYCH COOKIES, WIĘC MUSISZ POPRAWNIE SKONFIGUROWAĆ BANER I SKLASYFIKOWAĆ COOKIES ORAZ ZADBAĆ O ODPOWIEDNIE ZAPISY W POLITYCE PRYWATNOŚCI I POLITYCE COOKIES. =
-
-== Screenshots ==
-
-1. Ustawienia wtyczki CookieZen w panelu WordPress — pole Site Key.
-2. Baner zgód CookieZen na stronie odwiedzającego.
-3. Panel CookieZen — statystyki akceptacji zgód i lista wykrytych cookies.
+An equivalent entry is written to the browser's `localStorage` (`cmp:<site_key>`).
 
 == Changelog ==
 
+= 1.0.4 =
+* First release in the WordPress.org plugin directory. Earlier versions were distributed by hand, as a ZIP file downloaded from the CookieZen panel.
+* [Add] The plugin interface is translatable, with a Polish translation included.
+* [Fix] The plugin page address in the header now points to a working page.
+* [Fix] The loader URL is escaped when it is printed into the page.
+
 = 1.0.3 =
-* [Fix] Integracja z WP Consent API działa teraz także po stronie PHP. Wtyczka deklaruje tryb zgody `optin` przez filtr `wp_get_consent_type`, dzięki czemu funkcja `wp_has_consent()` respektuje decyzję użytkownika również w kodzie serwerowym. Wcześniej działała wyłącznie warstwa JavaScript, a sprawdzenia po stronie PHP przepuszczały skrypty mimo odmowy zgody.
+* [Fix] The WP Consent API integration now works on the PHP side as well. The plugin declares the optin consent type through the wp_get_consent_type filter, so wp_has_consent() respects the visitor's decision in server-side code too. Previously only the JavaScript layer worked, and PHP-side checks let scripts through despite a refusal.
 
 = 1.0.2 =
-* Pierwsze wydanie w oficjalnym katalogu WordPress.org (wcześniejsze wersje dystrybuowane ręcznie jako plik ZIP z panelu CookieZen).
-* [Add] Integracja przez Site Key — wstrzykiwanie loadera CookieZen w sekcji &lt;head&gt;.
-* [Add] Automatyczna integracja z WP Consent API (rola menedżera zgód).
-* [Add] Link „Ustawienia" na liście wtyczek prowadzący do konfiguracji.
-* [Enhancement] Optymalizacja priorytetu wstrzykiwania skryptu dla zgodności z motywami (m.in. Elementor Pro).
+* [Add] Integration through a Site Key, meaning the CookieZen loader script is inserted in the head section.
+* [Add] Automatic WP Consent API integration in the consent manager role.
+* [Add] A Settings link on the plugins list, leading to the configuration.
+* [Enhancement] The script insertion priority was tuned for theme compatibility, including Elementor Pro.
 
 == Upgrade Notice ==
 
-= 1.0.2 =
-Pierwsze wydanie w katalogu WordPress.org. Od teraz aktualizacje wtyczki instalujesz jednym kliknięciem z panelu WordPress.
+= 1.0.4 =
+First release in the WordPress.org plugin directory. From now on you install updates with one click from your WordPress admin.
