@@ -40,10 +40,13 @@ Projekty tłumaczeń zakłada się po zatwierdzeniu wtyczki, a własne tłumacze
 
 Interfejsu wtyczki ten wymóg nie dotyczy, ale i tak trzymamy angielskie źródła w `__()` oraz polskie tłumaczenie w `languages/`.
 
-**Pułapka: dla wtyczki z katalogu `load_plugin_textdomain()` jest zbędne, ale my mamy drugi kanał dystrybucji.**
-Klient pobierający ZIP z panelu CookieZen instaluje wtyczkę spoza katalogu, więc WordPress nie ma dla niej niczego w `WP_LANG_DIR`, a mechanizm just-in-time nie zagląda do katalogu `languages/` wtyczki.
-Dlatego wywołanie zostaje, na hooku `init`; wcześniejszy hook daje w WordPressie 6.7 i nowszych notice o zbyt wczesnym ładowaniu domeny.
-Ta sama uwaga dotyczy nagłówków wtyczki: `Description` tłumaczy się przez domenę tekstową, więc napis musi być w katalogu tłumaczeń, inaczej polski klient zobaczy angielski opis na liście wtyczek.
+Nie wołamy `load_plugin_textdomain()`, bo mechanizm just-in-time sam znajduje plik `.mo` w katalogu `languages/` wtyczki.
+Dotyczy to także instalacji ręcznej spoza katalogu, czyli paczki pobranej z panelu CookieZen: zmierzone 2026-09-20 na WordPressie 7.1.1 przez wgranie wariantu bez tego wywołania, po którym opis wtyczki i podpisy w ustawieniach pozostały polskie.
+Plugin Check zgłasza to wywołanie jako odradzane od WordPressa 4.6, więc jego brak jest jednocześnie zgodny z narzędziem i wystarczający.
+
+**Pułapka: nagłówek `Description` też idzie przez katalog tłumaczeń.**
+WordPress tłumaczy nagłówki wtyczki przez jej domenę tekstową, więc angielski napis w pliku musi mieć swój wpis w `.po`, inaczej polski klient zobaczy angielski opis na liście wtyczek.
+`xgettext` nie wyciąga nagłówków z komentarza, trzeba je dopisać ręcznie z komentarzem `#. Description of the plugin`.
 
 ## Zgłoszenie wtyczki
 
@@ -143,8 +146,13 @@ Domyślne środowisko to https://cookiezen.alwaysdata.net, czyli nasza testowa i
 Ma zainstalowane WP Consent API razem z wtyczką przykładową, więc pokrywa całą checklistę bez dokładania czegokolwiek.
 Lokalnie sprawdza się [Local by Flywheel](https://localwp.com/) albo `docker run -p 8080:80 wordpress`.
 
-**Pułapka: pole `Tested up to` deklaruje wersję, na której wtyczkę faktycznie sprawdzono.**
-Nie jest to najnowsza wersja WordPressa, jaka istnieje, więc wersja środowiska testowego i wartość tego pola muszą być te same.
+**Pułapka: pole `Tested up to` deklaruje wersję, na której wtyczkę faktycznie sprawdzono, i przyjmuje wyłącznie wersję główną.**
+Nie jest to najnowsza wersja WordPressa, jaka istnieje, więc wersja środowiska testowego i wartość tego pola muszą się zgadzać.
+Numer łatki jest błędem: przy WordPressie 7.1.1 w polu ma stać `7.1`, a Plugin Check odrzuca `7.1.1` kodem `invalid_tested_upto_minor`.
+
+Przed każdym zgłoszeniem uruchom wtyczkę [Plugin Check](https://wordpress.org/plugins/plugin-check/) na środowisku testowym, w Narzędzia → Sprawdź wtyczkę.
+Formularz zgłoszeniowy wymaga potwierdzenia, że jej uwagi są rozwiązane poza tymi, które uznajesz za fałszywe trafienia.
+Nasze stałe odstępstwo to `NonEnqueuedScript`, opisane w sekcji o odpowiedziach dla recenzji; wklej tamto uzasadnienie do pola „Additional Information" przy zgłoszeniu.
 
 Testowa instalacja ma podpięty żywy Site Key, więc kliknięcie w baner podczas testu dopisuje prawdziwy rekord zgody do statystyk tej witryny w produkcji.
 
@@ -178,9 +186,11 @@ This is documented in readme.txt under "External services". Privacy policy: http
 Synchroniczny znacznik `script` w `wp_head` z priorytetem 1:
 
 ```text
-A consent banner has to be able to gate tracking scripts before they execute. Our loader installs a MutationObserver at parse time so that dynamically injected script tags from marketing plugins are caught. Loading it with async or defer would create a fail-open race: trackers could fire before the observer is active, which defeats the purpose of consent gating.
+Plugin Check reports this as WordPress.WP.EnqueuedResources.NonEnqueuedScript. We are aware of the rule and the deviation is deliberate, for two reasons that both depend on our script running before any other script on the page.
 
-We hook wp_head at priority 1 rather than at a large negative value on purpose. Priority 1 runs after meta charset and title, which have to appear within the first 1024 bytes of head for correct HTML5 encoding detection, and still before marketing plugins at priority 10 or higher whose trackers need to be intercepted. The same rationale is documented inline in cookiezen.php.
+First, Google Consent Mode v2 default signals have to reach Google tags before gtag or Google Tag Manager initialises. Once a tag has initialised, the defaults arrive too late and the tag has already collected data without consent. Second, our loader sets window.wp_consent_type to "optin" for the WP Consent API. If any plugin that follows that standard reads the consent level before this value is set, the API reports consent as granted for every category, which is a fail-open exactly in the place a consent manager exists to prevent.
+
+wp_enqueue_script cannot give us that ordering. Enqueued scripts are printed together on wp_head at priority 9, ordered by their dependency graph, and a marketing plugin that enqueues its own tag can be printed before ours. We therefore hook wp_head at priority 1: after meta charset and title, which have to appear within the first 1024 bytes of head for correct HTML5 encoding detection, and before plugins hooked at priority 10 or later. The script is a single tag with no inline code, its URL is escaped with esc_url, and the same rationale is documented inline in cookiezen.php.
 ```
 
 ## Synchronizacja z panelem klienta

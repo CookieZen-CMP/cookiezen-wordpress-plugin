@@ -141,6 +141,17 @@ else
   fail "Stable tag (readme: '${RM_STABLE}') != Version (php: '${PHP_VERSION}') — zablokuje auto-update u klientow"
 fi
 
+# (1b) Stala COOKIEZEN_VERSION == Version (php)
+# Stala trafia do adresu loadera jako parametr wersji. Naglowka nie da sie
+# odczytac na frontzie bez czytania pliku przy kazdym zadaniu, wiec numer zyje
+# w dwoch miejscach i rozjazd trzeba wykrywac tutaj.
+PHP_VERSION_CONST="$(grep -m1 -E "^define\( 'COOKIEZEN_VERSION'" "${PHP_FILE}" | sed -E "s/.*'COOKIEZEN_VERSION',[[:space:]]*'([^']*)'.*/\1/")"
+if [[ -n "${PHP_VERSION_CONST}" && "${PHP_VERSION_CONST}" == "${PHP_VERSION}" ]]; then
+  pass "COOKIEZEN_VERSION == Version (${PHP_VERSION_CONST})"
+else
+  fail "COOKIEZEN_VERSION ('${PHP_VERSION_CONST}') != Version (php: '${PHP_VERSION}')"
+fi
+
 # (2) Requires at least
 if [[ -n "${PHP_REQ_AT_LEAST}" && "${PHP_REQ_AT_LEAST}" == "${RM_REQ_AT_LEAST}" ]]; then
   pass "Requires at least spojne (${PHP_REQ_AT_LEAST})"

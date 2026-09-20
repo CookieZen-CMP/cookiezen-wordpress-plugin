@@ -7,7 +7,7 @@
  * Author: Semavo Solutions Sp. z o.o.
  * Author URI: https://cookiezen.pl
  * Requires at least: 5.5
- * Tested up to: 7.1.1
+ * Tested up to: 7.1
  * Requires PHP: 7.4
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -19,24 +19,25 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-/**
- * Tlumaczenia dolaczone do wtyczki.
- *
- * Dla wtyczki serwowanej z katalogu WordPress.org to wywolanie jest zbedne, bo
- * tlumaczenia z translate.wordpress.org laduja w WP_LANG_DIR i mechanizm
- * just-in-time znajduje je sam. My mamy drugi kanal: ZIP pobierany przez klienta
- * z panelu CookieZen. Taka instalacja nie pochodzi z katalogu, wiec nie ma dla
- * niej niczego w WP_LANG_DIR, a just-in-time nie zaglada do `languages/` wtyczki.
- * Bez tego wywolania dolaczone `cookiezen-pl_PL.mo` nie zadziala u nikogo, kto
- * zainstalowal wtyczke recznie, i panel pokaze angielski zamiast polskiego.
- *
- * Hook `init`, nie `plugins_loaded`: od WordPressa 6.7 ladowanie domeny
- * wczesniej niz na `init` konczy sie notice o zbyt wczesnym wywolaniu.
+/*
+ * Wersja wtyczki jako stala. MUSI zgadzac sie z naglowkiem `Version` wyzej;
+ * pilnuje tego walidacja w scripts/build-wordpress-plugin.sh, bo naglowka nie da
+ * sie odczytac na frontzie bez czytania pliku przy kazdym zadaniu.
  */
-function cookiezen_load_textdomain() {
-    load_plugin_textdomain( 'cookiezen', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-}
-add_action( 'init', 'cookiezen_load_textdomain' );
+define( 'COOKIEZEN_VERSION', '1.0.4' );
+
+/*
+ * Nie wolamy `load_plugin_textdomain()`. Mechanizm just-in-time sam znajduje
+ * `languages/cookiezen-pl_PL.mo` w katalogu wtyczki, takze przy instalacji
+ * recznej spoza katalogu WordPress.org, czyli przy paczce pobranej z panelu
+ * CookieZen (zmierzone 2026-09-20 na WordPressie 7.1.1: wariant bez tego
+ * wywolania nadal pokazuje polski opis wtyczki i polskie podpisy w ustawieniach).
+ * Plugin Check zglasza to wywolanie jako odradzane od WordPressa 4.6.
+ *
+ * Nagłowek `Description` tlumaczy sie przez te sama domene tekstowa, wiec jego
+ * tresc musi byc wpisem w katalogu tlumaczen; sam angielski naglowek w pliku
+ * nie wystarczy.
+ */
 
 function cookiezen_register_settings() {
     register_setting(
@@ -137,9 +138,27 @@ function cookiezen_wp_consent_type() {
 add_filter( 'wp_get_consent_type', 'cookiezen_wp_consent_type' );
 
 /**
- * Script MUSI byc synchroniczny (bez async/defer) — loader instaluje MutationObserver
- * w parse-time aby zblokowac dynamicznie dodawane <script> trackerow. Async spowodowalby
- * fail-open (trackery odpalane PRZED naszym obserwatorem).
+ * Skrypt MUSI byc synchroniczny (bez async/defer) i musi stac przed skryptami
+ * innych wtyczek. Powody, w kolejnosci waznosci:
+ *
+ * 1. Sygnaly Consent Mode v2 (defaults) maja dotrzec do tagow Google, ZANIM
+ *    gtag albo GTM sie zainicjuje. Po inicjalizacji jest za pozno: tag zdazy
+ *    zebrac dane bez zgody.
+ * 2. `window.wp_consent_type = 'optin'` musi byc ustawione, zanim jakakolwiek
+ *    wtyczka zgodna z WP Consent API odpyta o zgode. Brak tej zmiennej oznacza
+ *    fail open, czyli zgode udzielona dla kazdej kategorii.
+ * 3. Gdy wlaczone jest automatyczne blokowanie, loader instaluje dodatkowo
+ *    MutationObserver w czasie parsowania. Ta sciezka jest dzis wylaczona
+ *    globalnie, wiec nie jest argumentem nosnym, ale byla powodem pierwotnym.
+ *
+ * `async` albo `defer` lamie punkty 1 i 2 niezaleznie od stanu blokowania.
+ *
+ * Skrypt idzie przez kolejke, ale drukujemy go sami, zamiast czekac na
+ * `wp_print_head_scripts` z priorytetu 9. Kolejka daje uchwyt, ktorym wlasciciel
+ * strony moze skrypt usunac przez `wp_dequeue_script( 'cookiezen-loader' )`,
+ * a reczny druk zachowuje pierwszenstwo wobec wtyczek wypisujacych wlasne tagi
+ * wprost do <head> na priorytetach 2-8. Zmierzone 2026-09-20: loader drukuje sie
+ * przed skryptami konkurencyjnej wtyczki CMP korzystajacej z kolejki.
  */
 function cookiezen_inject_script() {
     $site_key = get_option( 'cookiezen_site_key' );
@@ -149,7 +168,9 @@ function cookiezen_inject_script() {
     }
 
     $loader_url = add_query_arg( 'site_key', $site_key, 'https://cz-cdn.com/api/cmp/loader' );
-    echo '<script src="' . esc_url( $loader_url ) . '"></script>' . "\n";
+
+    wp_enqueue_script( 'cookiezen-loader', $loader_url, array(), COOKIEZEN_VERSION, false );
+    wp_print_scripts( 'cookiezen-loader' );
 }
 /*
  * Priorytet `1` (nie -9999): wpada PO `<meta charset>` / `<title>` (wymog HTML5 dla
