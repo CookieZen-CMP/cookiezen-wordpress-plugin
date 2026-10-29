@@ -96,16 +96,18 @@ info() { printf "${C_INFO}==>${C_RST} %s\n" "$1"; }
 
 # --- Ekstrakcja metadanych -------------------------------------------------
 # Naglowek PHP: " * Pole: wartosc"
+# Brak pola to poprawny wynik (pusty string), nie blad: `Tested up to` ma w tym
+# pliku NIE istniec, a `set -e` z `pipefail` ubilby skrypt na kodzie 1 z grepa.
 php_meta() {
   grep -m1 -E "^[[:space:]]*\*[[:space:]]*$1:" "${PHP_FILE}" \
     | sed -E "s/^[[:space:]]*\*[[:space:]]*$1:[[:space:]]*//" \
-    | tr -d '\r' | sed -E 's/[[:space:]]+$//'
+    | tr -d '\r' | sed -E 's/[[:space:]]+$//' || true
 }
-# Naglowek readme: "Pole: wartosc"
+# Naglowek readme: "Pole: wartosc". Brak pola jak wyzej: pusty string, nie blad.
 readme_meta() {
   grep -m1 -E "^$1:" "${README_FILE}" \
     | sed -E "s/^$1:[[:space:]]*//" \
-    | tr -d '\r' | sed -E 's/[[:space:]]+$//'
+    | tr -d '\r' | sed -E 's/[[:space:]]+$//' || true
 }
 
 # =====================================================================
@@ -159,11 +161,19 @@ else
   fail "Requires at least niespojne (php: '${PHP_REQ_AT_LEAST}' vs readme: '${RM_REQ_AT_LEAST}')"
 fi
 
-# (3) Tested up to
-if [[ -n "${PHP_TESTED}" && "${PHP_TESTED}" == "${RM_TESTED}" ]]; then
-  pass "Tested up to spojne (${PHP_TESTED})"
+# (3) Tested up to WYLACZNIE w readme.txt
+# Jedynym wspieranym miejscem tej deklaracji jest readme.txt. Ten sam naglowek w
+# pliku PHP potrafi wziac gore nad readme, wiec karta wtyczki pokazuje wtedy inna
+# zgodnosc niz utrzymywana. Zespol recenzji katalogu zglosil to nam 2026-09-21.
+if [[ -z "${PHP_TESTED}" ]]; then
+  pass "Tested up to nieobecne w naglowku PHP"
 else
-  fail "Tested up to niespojne (php: '${PHP_TESTED}' vs readme: '${RM_TESTED}')"
+  fail "Tested up to ('${PHP_TESTED}') stoi w ${SLUG}.php — usun, zostaje tylko readme.txt"
+fi
+if [[ -n "${RM_TESTED}" ]]; then
+  pass "Tested up to obecne w readme (${RM_TESTED})"
+else
+  fail "Brak 'Tested up to' w readme.txt"
 fi
 
 # (4) Requires PHP
@@ -219,12 +229,14 @@ cp "${ROOT_DIR}/uninstall.php" "${BUILD_DIR}/uninstall.php"
 cp "${README_FILE}"  "${BUILD_DIR}/readme.txt"
 cp "${LICENSE_FILE}" "${BUILD_DIR}/LICENSE.txt"
 
-# languages/ (Domain Path) — kopiujemy zawartosc, ale bez smieci
+# languages/ (Domain Path) — do paczki idzie wylacznie szablon .pot.
+# Gotowych tlumaczen (.po/.mo) katalog WordPress.org nie chce w pakiecie: generuje
+# je sam z translate.wordpress.org i dostarcza zwyklym kanalem aktualizacji.
+# Zrodla tlumaczen zostaja w repo, bo paczka z panelu CookieZen nie ma tamtego kanalu.
 mkdir -p "${BUILD_DIR}/languages"
 if [[ -d "${ROOT_DIR}/languages" ]]; then
-  # kopiuj .gitkeep oraz ewentualne pliki .po/.mo/.pot
   find "${ROOT_DIR}/languages" -maxdepth 1 -type f \
-    \( -name '.gitkeep' -o -name '*.po' -o -name '*.mo' -o -name '*.pot' \) \
+    \( -name '.gitkeep' -o -name '*.pot' \) \
     -exec cp {} "${BUILD_DIR}/languages/" \;
 fi
 

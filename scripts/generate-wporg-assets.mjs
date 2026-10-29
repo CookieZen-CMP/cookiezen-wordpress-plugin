@@ -56,10 +56,22 @@ const wordmark = () => `
     <path d="M25.02,33.48c-2.31,0-3.7,1.46-3.7,3.4s1.39,3.42,3.7,3.42,3.69-1.49,3.69-3.42-1.39-3.4-3.69-3.4"/>
   </g>`
 
+/*
+ * Wysokosc sygnetu jako ulamek kanwy ikony. Katalog serwuje te ikone w 128 px w
+ * wynikach wyszukiwania, wiec kazdy margines zjada realny rozmiar rysunku: przy
+ * 0.56 sygnet mial tam okolo 72 px i czytal sie drobniej niz u wtyczek
+ * wypelniajacych kafelek. Gorna granice wyznacza zaokraglony rog bialej karty:
+ * przy promieniu 0.20 boku sciecie rogu siega w glab okolo 5,9% boku po
+ * przekatnej, a 0.84 zostawia 8% marginesu w pionie i 10,4% w poziomie (sygnet
+ * jest wezszy niz wyzszy), wiec ramka rysunku mija sciecie z zapasem.
+ * Podniesienie promienia wymaga przeliczenia tej granicy od nowa.
+ */
+const ICON_MARK_RATIO = 0.84
+
 // --- ICON: rounded white card with centered sygnet ---
 function iconSvg(size) {
   const r = Math.round(size * 0.20)
-  const inner = Math.round(size * 0.56)         // sygnet target height
+  const inner = Math.round(size * ICON_MARK_RATIO)
   const w = inner * (41.55 / 44.08)             // keep aspect ratio
   const x = (size - w) / 2
   const y = (size - inner) / 2

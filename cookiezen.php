@@ -7,7 +7,6 @@
  * Author: Semavo Solutions Sp. z o.o.
  * Author URI: https://cookiezen.pl
  * Requires at least: 5.5
- * Tested up to: 7.1
  * Requires PHP: 7.4
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -27,16 +26,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'COOKIEZEN_VERSION', '1.0.4' );
 
 /*
- * Nie wolamy `load_plugin_textdomain()`. Mechanizm just-in-time sam znajduje
- * `languages/cookiezen-pl_PL.mo` w katalogu wtyczki, takze przy instalacji
- * recznej spoza katalogu WordPress.org, czyli przy paczce pobranej z panelu
- * CookieZen (zmierzone 2026-09-20 na WordPressie 7.1.1: wariant bez tego
- * wywolania nadal pokazuje polski opis wtyczki i polskie podpisy w ustawieniach).
+ * Nie wolamy `load_plugin_textdomain()`. Mechanizm just-in-time sam znajduje plik
+ * `.mo` biezacej lokalizacji, zarowno w `wp-content/languages/plugins/`, gdzie
+ * kladzie go katalog WordPress.org, jak i w `languages/` wtyczki (zmierzone
+ * 2026-09-20 na WordPressie 7.1.1: wariant bez tego wywolania nadal pokazuje
+ * polski opis wtyczki i polskie podpisy w ustawieniach).
  * Plugin Check zglasza to wywolanie jako odradzane od WordPressa 4.6.
  *
- * Nagłowek `Description` tlumaczy sie przez te sama domene tekstowa, wiec jego
- * tresc musi byc wpisem w katalogu tlumaczen; sam angielski naglowek w pliku
- * nie wystarczy.
+ * Gotowe tlumaczenia (.po/.mo) nie ida w paczce dystrybucyjnej: katalog
+ * WordPress.org generuje je z translate.wordpress.org i dostarcza wlasnym kanalem.
+ * Zrodla zostaja w repo, w `languages/`.
  */
 
 function cookiezen_register_settings() {

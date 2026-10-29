@@ -38,14 +38,19 @@ Zespół wtyczek ogłosił ten wymóg 2025-07-28 wpisem „Requiring the README 
 Polska wersja karty nie powstaje przez drugi plik, tylko przez tłumaczenie na translate.wordpress.org.
 Projekty tłumaczeń zakłada się po zatwierdzeniu wtyczki, a własne tłumaczenia zatwierdza się samodzielnie po uzyskaniu roli PTE dla swojej wtyczki.
 
-Interfejsu wtyczki ten wymóg nie dotyczy, ale i tak trzymamy angielskie źródła w `__()` oraz polskie tłumaczenie w `languages/`.
+Interfejsu wtyczki ten wymóg nie dotyczy, ale i tak trzymamy angielskie źródła w `__()`, a polskie tłumaczenie w `languages/` tego repo.
 
-Nie wołamy `load_plugin_textdomain()`, bo mechanizm just-in-time sam znajduje plik `.mo` w katalogu `languages/` wtyczki.
-Dotyczy to także instalacji ręcznej spoza katalogu, czyli paczki pobranej z panelu CookieZen: zmierzone 2026-09-20 na WordPressie 7.1.1 przez wgranie wariantu bez tego wywołania, po którym opis wtyczki i podpisy w ustawieniach pozostały polskie.
+**Pułapka: gotowe tłumaczenia nie wchodzą do paczki dystrybucyjnej.**
+Katalog WordPress.org generuje pliki `.po` i `.mo` z translate.wordpress.org i dostarcza je zwykłym kanałem aktualizacji tłumaczeń, więc te same pliki w pakiecie uznaje za zbędne; zespół recenzji zgłosił to nam 2026-09-21.
+Build kopiuje do `dist/` wyłącznie szablon `.pot`, a źródła tłumaczeń zostają w repo.
+Konsekwencja dotyczy paczki pobieranej z panelu CookieZen, bo ona nie ma kanału z translate.wordpress.org: do czasu wgrania tłumaczeń tam i uzyskania roli PTE polski klient zobaczy angielski interfejs wtyczki.
+
+Nie wołamy `load_plugin_textdomain()`, bo mechanizm just-in-time sam znajduje plik `.mo` bieżącej lokalizacji, zarówno w `wp-content/languages/plugins/`, gdzie kładzie go katalog, jak i w `languages/` wtyczki.
+Zmierzone 2026-09-20 na WordPressie 7.1.1 przez wgranie wariantu bez tego wywołania, po którym opis wtyczki i podpisy w ustawieniach pozostały polskie.
 Plugin Check zgłasza to wywołanie jako odradzane od WordPressa 4.6, więc jego brak jest jednocześnie zgodny z narzędziem i wystarczający.
 
 **Pułapka: nagłówek `Description` też idzie przez katalog tłumaczeń.**
-WordPress tłumaczy nagłówki wtyczki przez jej domenę tekstową, więc angielski napis w pliku musi mieć swój wpis w `.po`, inaczej polski klient zobaczy angielski opis na liście wtyczek.
+WordPress tłumaczy nagłówki wtyczki przez jej domenę tekstową, więc angielski napis w pliku musi mieć swój wpis w tłumaczeniu, inaczej polski klient zobaczy angielski opis na liście wtyczek.
 `xgettext` nie wyciąga nagłówków z komentarza, trzeba je dopisać ręcznie z komentarzem `#. Description of the plugin`.
 
 ## Zgłoszenie wtyczki
@@ -111,6 +116,25 @@ Grafiki mają warianty językowe.
 Plik bez sufiksu jest domyślny, a `banner-772x250-pl_PL.png` serwuje się polskim odwiedzającym; ta sama zasada działa dla zrzutów ekranu, na przykład `screenshot-1-pl_PL.png`.
 Zrzuty wymagają jednego pliku na każdą linię sekcji `== Screenshots ==` w `readme.txt`, więc sekcję dopisuje się razem z plikami, nigdy wcześniej.
 
+### Regeneracja grafik
+
+Banery i ikonę składa `scripts/generate-wporg-assets.mjs` z logotypów marki, a wynik trafia do `.wporg-assets/`.
+Po każdej zmianie w generatorze uruchom go i podmień pliki w `assets/` w working copy SVN; katalog serwuje je niezależnie od `trunk/`, więc podmiana nie wymaga podbicia wersji wtyczki.
+
+**Pułapka: to repo nie ma własnego `package.json` ani `node_modules`, a generator wymaga pakietu `sharp`.**
+Node rozwiązuje `import` względem położenia pliku, nie katalogu roboczego, więc samo `cd` do repo z `sharp` nic nie da.
+Najprościej uruchomić kopię skryptu obok cudzego `node_modules`, na przykład z `cmp-app`:
+
+```bash
+WORK="$(mktemp -d)"
+ln -s ~/Projects/cmp-app/node_modules "${WORK}/node_modules"
+cp scripts/generate-wporg-assets.mjs "${WORK}/"
+node "${WORK}/generate-wporg-assets.mjs" "$(pwd)/.wporg-assets"
+```
+
+Po regeneracji porównaj sumy kontrolne starych i nowych plików.
+Zmiana dotykająca jednej grafiki musi zostawić pozostałe bajt w bajt nietknięte; każdy inny wynik znaczy, że ruszyłeś więcej, niż zamierzałeś.
+
 ## Wydanie nowej wersji
 
 Podbij metadane w tym repo: `Version:` w `cookiezen.php`, `Stable tag:` w `readme.txt` oraz wpis w sekcji `== Changelog ==`, opcjonalnie też w `== Upgrade Notice ==`.
@@ -149,6 +173,10 @@ Lokalnie sprawdza się [Local by Flywheel](https://localwp.com/) albo `docker ru
 **Pułapka: pole `Tested up to` deklaruje wersję, na której wtyczkę faktycznie sprawdzono, i przyjmuje wyłącznie wersję główną.**
 Nie jest to najnowsza wersja WordPressa, jaka istnieje, więc wersja środowiska testowego i wartość tego pola muszą się zgadzać.
 Numer łatki jest błędem: przy WordPressie 7.1.1 w polu ma stać `7.1`, a Plugin Check odrzuca `7.1.1` kodem `invalid_tested_upto_minor`.
+
+**Pułapka: to pole stoi wyłącznie w `readme.txt`, nigdy w nagłówku `cookiezen.php`.**
+Nagłówek w pliku PHP potrafi wziąć górę nad readme, więc karta wtyczki, wyszukiwarka katalogu i komunikat o zgodności pokazują wtedy inną wersję niż ta, którą utrzymujesz.
+Zespół recenzji zgłosił nam to 2026-09-21 jako błąd blokujący; build od tego czasu odrzuca obecność tego nagłówka w pliku PHP.
 
 Przed każdym zgłoszeniem uruchom wtyczkę [Plugin Check](https://wordpress.org/plugins/plugin-check/) na środowisku testowym, w Narzędzia → Sprawdź wtyczkę.
 Formularz zgłoszeniowy wymaga potwierdzenia, że jej uwagi są rozwiązane poza tymi, które uznajesz za fałszywe trafienia.
