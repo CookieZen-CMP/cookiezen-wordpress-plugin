@@ -4,7 +4,7 @@ Tags: cookie banner, cookie consent, cookie notice, GDPR, privacy
 Requires at least: 5.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.4
+Stable tag: 1.0.5-rc.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -72,6 +72,14 @@ Tak, wtyczka jest darmowa. Do działania potrzebuje konta w usłudze CookieZen, 
 
 Tak, automatycznie. Gdy wtyczka [WP Consent API](https://wordpress.org/plugins/wp-consent-api/) jest aktywna, CookieZen pełni rolę menedżera zgód i przekazuje decyzję odwiedzającego do zgodnych wtyczek, także do sprawdzeń wykonywanych po stronie PHP. Nie ma nic do skonfigurowania.
 
+= Czy CookieZen współpracuje z PixelYourSite? =
+
+Tak, bez konfiguracji. Dopóki odwiedzający nie wyrazi zgody na marketing, skrypty śledzące i piksele PixelYourSite nie działają w przeglądarce, zdarzenia z serwera (Conversions API) nie są wysyłane, a ciasteczka śledzące nie są zapisywane. Kod, który sam dodasz w sekcji Head & Footer PixelYourSite, nie jest tym objęty. Po akceptacji startuje na tej samej stronie, więc strona, na której padła zgoda, też jest mierzona. Po wycofaniu zgody zdarzenia z serwera zatrzymują się od razu, a ciasteczka zapisane przez PixelYourSite są usuwane; od PixelYourSite 11.4.3 także śledzenie w przeglądarce milknie jeszcze na tej samej stronie, w starszych wersjach od następnej. Odwiedzający spoza regionów, w których pokazujesz baner, są mierzeni jak dotąd.
+
+Integrację wyłączysz, zwracając false z filtra `cookiezen_pys_integration`.
+
+Po aktualizacji wtyczka jednorazowo czyści page cache popularnych wtyczek (LiteSpeed Cache, WP Rocket, W3 Total Cache, WP Super Cache, SiteGround Optimizer, Nginx Helper, Breeze, WP Fastest Cache). Jeśli hosting albo CDN przechowuje całe strony (na przykład Cloudflare APO albo Varnish), wyczyść ten cache samodzielnie po aktualizacji.
+
 = Czy wtyczka działa bez połączenia z internetem? =
 
 Nie. CookieZen jest usługą, czyli platformą zarządzania zgodami. Baner, klasyfikacja cookies i rejestr zgód działają w oparciu o serwery CookieZen, więc wymagane jest aktywne konto i połączenie z siecią.
@@ -114,11 +122,18 @@ Regulamin: https://cookiezen.pl/regulamin
 
 == Ciasteczka tworzone przez CookieZen ==
 
-Wtyczka zapisuje jedno ciasteczko, `cmp_consent_<site_key>`, w którym przechowuje wybór odwiedzającego w kategoriach analityka, marketing i preferencje. Ciasteczko jest ważne rok i nie zawiera danych osobowych.
+Wtyczka zapisuje ciasteczko `cmp_consent_<site_key>`, w którym przechowuje wybór odwiedzającego w kategoriach analityka, marketing i preferencje. Ciasteczko jest ważne rok i nie zawiera danych osobowych.
+
+Na stronach z PixelYourSite wtyczka zapisuje też `cmp_pys_<site_key>`, sesyjne ciasteczko z kopią bieżącej decyzji o marketingu dla serwera, dzięki któremu PixelYourSite wysyła zdarzenia z serwera tylko za zgodą. Nie zawiera danych osobowych i znika z końcem sesji przeglądarki albo po wycofaniu zgody.
 
 Analogiczny wpis zapisywany jest w `localStorage` przeglądarki (`cmp:<site_key>`).
 
 == Changelog ==
+
+= 1.0.5-rc.2 =
+* [Add] Integracja z PixelYourSite: dopóki odwiedzający nie wyrazi zgody na marketing, śledzenie PixelYourSite nie działa w przeglądarce, zdarzenia z serwera (Conversions API) nie są wysyłane, a ciasteczka śledzące nie są zapisywane; po zgodzie startuje na tej samej stronie; po wycofaniu zgody jego ciasteczka są usuwane, a od PixelYourSite 11.4.3 milknie jeszcze na tej samej stronie.
+* [Add] Jednorazowe czyszczenie page cache popularnych wtyczek po aktualizacji.
+* [Enhancement] Skrypt loadera jest oznaczony tak, żeby optymalizatory JavaScript go nie odraczały ani nie opóźniały.
 
 = 1.0.4 =
 * Pierwsze wydanie w katalogu WordPress.org. Wcześniejsze wersje były dystrybuowane ręcznie jako plik ZIP pobierany z panelu CookieZen.

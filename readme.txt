@@ -4,7 +4,7 @@ Tags: cookie banner, cookie consent, cookie notice, GDPR, privacy
 Requires at least: 5.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.4
+Stable tag: 1.0.5-rc.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -72,6 +72,14 @@ Yes, the plugin is free. It needs an account in the CookieZen service, which has
 
 Yes, automatically. When the [WP Consent API](https://wordpress.org/plugins/wp-consent-api/) plugin is active, CookieZen acts as the consent manager and passes the visitor's decision to compatible plugins, including the checks made in PHP. There is nothing to configure.
 
+= Does CookieZen work with PixelYourSite? =
+
+Yes, with no configuration. While a visitor has not given marketing consent, PixelYourSite's tracking scripts and pixels do not run in the browser, its server-side events (Conversions API) are not sent and its tracking cookies are not set. Code you add yourself in PixelYourSite's Head & Footer section is not covered. Once the visitor accepts, it starts on the same page, so the page where consent was given is measured too. If the visitor withdraws consent, server-side events stop right away and the cookies PixelYourSite set are removed; with PixelYourSite 11.4.3 or newer its browser tracking also stops on the same page, with older versions from the next page. Visitors outside the regions where you show the banner are measured as usual.
+
+To switch the integration off, return false from the `cookiezen_pys_integration` filter.
+
+After an update the plugin clears the page cache of common caching plugins once (LiteSpeed Cache, WP Rocket, W3 Total Cache, WP Super Cache, SiteGround Optimizer, Nginx Helper, Breeze, WP Fastest Cache). If your host or CDN caches whole pages (for example Cloudflare APO or Varnish), clear that cache yourself after updating.
+
 = Does the plugin work without an internet connection? =
 
 No. CookieZen is a service, a consent management platform. The banner, the cookie classification and the consent register rely on CookieZen servers, so an active account and a network connection are required.
@@ -114,11 +122,18 @@ Terms of service: https://cookiezen.pl/regulamin
 
 == Cookies set by CookieZen ==
 
-The plugin sets a single cookie, `cmp_consent_<site_key>`, which stores the visitor's choice across the analytics, marketing and preferences categories. The cookie lasts one year and contains no personal data.
+The plugin sets the cookie `cmp_consent_<site_key>`, which stores the visitor's choice across the analytics, marketing and preferences categories. The cookie lasts one year and contains no personal data.
+
+On sites with PixelYourSite the plugin also sets `cmp_pys_<site_key>`, a session cookie that copies the visitor's current marketing decision for the server, so that PixelYourSite sends server-side events only with consent. It contains no personal data and is removed when the browser session ends or when consent is withdrawn.
 
 An equivalent entry is written to the browser's `localStorage` (`cmp:<site_key>`).
 
 == Changelog ==
+
+= 1.0.5-rc.2 =
+* [Add] PixelYourSite integration: until the visitor gives marketing consent, PixelYourSite's tracking does not run in the browser, its server-side events (Conversions API) are not sent and its tracking cookies are not set; after consent it starts on the same page; after consent is withdrawn its cookies are removed and, with PixelYourSite 11.4.3 or newer, it stops on the same page.
+* [Add] The page cache of common caching plugins is cleared once after an update.
+* [Enhancement] The loader script is marked so that JavaScript optimizers do not defer or delay it.
 
 = 1.0.4 =
 * First release in the WordPress.org plugin directory. Earlier versions were distributed by hand, as a ZIP file downloaded from the CookieZen panel.
