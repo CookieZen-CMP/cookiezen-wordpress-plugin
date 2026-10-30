@@ -4,7 +4,7 @@ Tags: cookie banner, cookie consent, cookie notice, GDPR, privacy
 Requires at least: 5.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.5-rc.3
+Stable tag: 1.0.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -130,7 +130,7 @@ An equivalent entry is written to the browser's `localStorage` (`cmp:<site_key>`
 
 == Changelog ==
 
-= 1.0.5-rc.3 =
+= 1.0.5 =
 * [Add] PixelYourSite integration: until the visitor gives marketing consent, PixelYourSite's tracking does not run in the browser, its server-side events (Conversions API) are not sent and its tracking cookies are not set; after consent it starts on the same page; after consent is withdrawn its cookies are removed and, with PixelYourSite 11.4.3 or newer, it stops on the same page. While your CookieZen subscription is inactive, the integration does not hold PixelYourSite back.
 * [Add] The page cache of common caching plugins is cleared once after an update.
 * [Enhancement] The loader script is marked so that JavaScript optimizers do not defer or delay it.
@@ -151,6 +151,9 @@ An equivalent entry is written to the browser's `localStorage` (`cmp:<site_key>`
 * [Enhancement] The script insertion priority was tuned for theme compatibility, including Elementor Pro.
 
 == Upgrade Notice ==
+
+= 1.0.5 =
+PixelYourSite now waits for marketing consent, in the browser and on the server. The page cache of common caching plugins is cleared once after the update.
 
 = 1.0.4 =
 First release in the WordPress.org plugin directory. From now on you install updates with one click from your WordPress admin.

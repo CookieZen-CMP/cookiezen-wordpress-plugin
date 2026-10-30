@@ -3,7 +3,7 @@
  * Plugin Name: CookieZen
  * Plugin URI: https://cookiezen.pl/?utm_source=wordpress&utm_medium=plugin&utm_campaign=plugin_uri
  * Description: A consent management platform (CMP) for handling visitor consent. Automatic scanner, Google Consent Mode v2, full cookie banner customization and regulatory compliance in one place.
- * Version: 1.0.5-rc.3
+ * Version: 1.0.5
  * Author: Semavo Solutions Sp. z o.o.
  * Author URI: https://cookiezen.pl
  * Requires at least: 5.5
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * pilnuje tego walidacja w scripts/build-wordpress-plugin.sh, bo naglowka nie da
  * sie odczytac na frontzie bez czytania pliku przy kazdym zadaniu.
  */
-define( 'COOKIEZEN_VERSION', '1.0.5-rc.3' );
+define( 'COOKIEZEN_VERSION', '1.0.5' );
 
 /*
  * Nie wolamy `load_plugin_textdomain()`. Mechanizm just-in-time sam znajduje plik

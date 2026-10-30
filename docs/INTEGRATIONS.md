@@ -110,7 +110,7 @@ Blokada w przeglądarce działa dodatkowo tylko wtedy, gdy loader wydrukował si
 - Uprząż `scripts/wordpress-pys-harness/` w repo cmp-app prowadzi prawdziwy Chrome przez scenariusze na WordPress Playground; przebieg i kontrola pozytywna są w nagłówku `run.ts`.
 - Canary na żywych sklepach według `PUBLISHING.md`, sekcja „Canary i wycofanie”.
 
-Sprawdzone przed wydaniem 1.0.5 (2026-10-30): kontrakt zielony na PYS 11.4.4; uprząż zielona na PYS 11.4.4 (PHP 7.4 i 8.x, także z emulacją opóźniania JS) i 11.1.2, scenariusz strony z wyłączonym CMP na PYS 11.4.4 z PHP 8.3; canary 1.0.5-rc.2 zgodny na PYS 11.1.2, 11.4.2.1 i 11.4.4 z WP Rocket, LiteSpeed Cache i Cloudflare.
+Sprawdzone przed wydaniem 1.0.5 (2026-10-30): kontrakt zielony na PYS 11.4.4; uprząż zielona na PYS 11.4.4 (PHP 7.4 i 8.x, także z emulacją opóźniania JS) i 11.1.2, scenariusz strony z wyłączonym CMP na PYS 11.4.4 z PHP 8.3; canary 1.0.5-rc.2 zgodny na PYS 11.1.2, 11.4.2.1 i 11.4.4 z WP Rocket, LiteSpeed Cache i Cloudflare, a 1.0.5-rc.3 na PYS 11.4.4 z WP Rocket i Cloudflare.
 
 ## WP Consent API (od 1.0.3)
 
