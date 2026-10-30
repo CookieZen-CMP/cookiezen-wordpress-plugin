@@ -11,7 +11,7 @@
  * ktore ma zainstalowany sharp, np.:
  *   node scripts/generate-wporg-assets.mjs ./.wporg-assets
  *
- * Assety NIE wchodza do ZIP-a wtyczki — trafiaja wylacznie do SVN /assets/.
+ * Assety NIE wchodza do ZIP-a wtyczki - trafiaja wylacznie do SVN /assets/.
  */
 import sharp from 'sharp'
 import { mkdirSync } from 'node:fs'

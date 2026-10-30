@@ -7,14 +7,14 @@
 #
 # Kroki:
 #   1. Waliduje spojnosc metadanych (readme.txt <-> cookiezen.php) i reguly WP.org.
-#   2. Kopiuje pliki wtyczki do dist/cookiezen/ (slug jako nazwa folderu — wymog WP.org).
+#   2. Kopiuje pliki wtyczki do dist/cookiezen/ (slug jako nazwa folderu - wymog WP.org).
 #   3. Pakuje do dist/cookiezen.zip (pomija .wporg-assets/, scripts/, pliki dev).
 #   4. Kopiuje ZIP do panelu klienta i/lub odpytuje readme validator.
 #
 # KOPIA DO PANELU JEST DOMYSLNA. Zrodlem prawdy dla kodu wtyczki jest to repo, a
 # cmp-app/public/cookiezen.zip to wylacznie artefakt buildu. Wczesniej kopiowanie
 # bylo opcjonalna flaga, wiec build bez niej cicho zostawial w panelu stara paczke
-# i klienci pobierali nieaktualna wtyczke — nic tego nie wykrywalo.
+# i klienci pobierali nieaktualna wtyczke - nic tego nie wykrywalo.
 #
 # Sciezka docelowa, w kolejnosci: --copy-to-panel <sciezka>, zmienna CMP_APP_PANEL_ZIP,
 # domyslnie <repo>/../cmp-app/public/cookiezen.zip.
@@ -140,7 +140,7 @@ RM_TAGS="$(readme_meta 'Tags')"
 if [[ -n "${PHP_VERSION}" && "${PHP_VERSION}" == "${RM_STABLE}" ]]; then
   pass "Stable tag == Version (${PHP_VERSION})"
 else
-  fail "Stable tag (readme: '${RM_STABLE}') != Version (php: '${PHP_VERSION}') — zablokuje auto-update u klientow"
+  fail "Stable tag (readme: '${RM_STABLE}') != Version (php: '${PHP_VERSION}') - zablokuje auto-update u klientow"
 fi
 
 # (1b) Stala COOKIEZEN_VERSION == Version (php)
@@ -168,7 +168,7 @@ fi
 if [[ -z "${PHP_TESTED}" ]]; then
   pass "Tested up to nieobecne w naglowku PHP"
 else
-  fail "Tested up to ('${PHP_TESTED}') stoi w ${SLUG}.php — usun, zostaje tylko readme.txt"
+  fail "Tested up to ('${PHP_TESTED}') stoi w ${SLUG}.php - usun, zostaje tylko readme.txt"
 fi
 if [[ -n "${RM_TESTED}" ]]; then
   pass "Tested up to obecne w readme (${RM_TESTED})"
@@ -191,7 +191,7 @@ fi
 if [[ "${TAG_COUNT}" -ge 1 && "${TAG_COUNT}" -le 5 ]]; then
   pass "Liczba tagow OK (${TAG_COUNT}/5)"
 else
-  fail "Liczba tagow poza zakresem 1..5 (jest ${TAG_COUNT}) — WP.org odrzuca >5"
+  fail "Liczba tagow poza zakresem 1..5 (jest ${TAG_COUNT}) - WP.org odrzuca >5"
 fi
 
 # (6) Brak nazw konkurencji w Tags
@@ -229,7 +229,7 @@ cp "${ROOT_DIR}/uninstall.php" "${BUILD_DIR}/uninstall.php"
 cp "${README_FILE}"  "${BUILD_DIR}/readme.txt"
 cp "${LICENSE_FILE}" "${BUILD_DIR}/LICENSE.txt"
 
-# languages/ (Domain Path) — do paczki idzie wylacznie szablon .pot.
+# languages/ (Domain Path) - do paczki idzie wylacznie szablon .pot.
 # Gotowych tlumaczen (.po/.mo) katalog WordPress.org nie chce w pakiecie: generuje
 # je sam z translate.wordpress.org i dostarcza zwyklym kanalem aktualizacji.
 # Zrodla tlumaczen zostaja w repo, bo paczka z panelu CookieZen nie ma tamtego kanalu.
@@ -304,7 +304,7 @@ if [[ "${VALIDATE_README}" == "true" ]]; then
       echo "${RESP}" | sed -E 's/<[^>]+>/ /g' | grep -iE 'error|warning|fatal' \
         | sed -E 's/[[:space:]]+/ /g' | sed '/^ *$/d' | head -20 | sed 's/^/        /' || true
       if echo "${RESP}" | grep -qiE 'fatal error|errors found'; then
-        fail "Readme validator zglosil bledy — popraw readme.txt przed submisja"
+        fail "Readme validator zglosil bledy - popraw readme.txt przed submisja"
       else
         printf "  ${C_INFO}[INFO]${C_RST} Readme validator zglosil ostrzezenia (nie blokuja publikacji)\n"
       fi
@@ -312,11 +312,11 @@ if [[ "${VALIDATE_README}" == "true" ]]; then
       pass "Readme validator: brak bledow"
     fi
   else
-    printf "  ${C_INFO}[INFO]${C_RST} Brak 'curl' — pomijam online walidacje readme\n"
+    printf "  ${C_INFO}[INFO]${C_RST} Brak 'curl' - pomijam online walidacje readme\n"
   fi
 fi
 
-# Kopia do panelu klienta (cmp-app) — domyslna, patrz naglowek pliku.
+# Kopia do panelu klienta (cmp-app) - domyslna, patrz naglowek pliku.
 if [[ -n "${COPY_TO_PANEL}" ]]; then
   info "Kopiowanie ZIP-a do panelu klienta"
   PANEL_DIR="$(dirname "${COPY_TO_PANEL}")"
@@ -327,7 +327,7 @@ if [[ -n "${COPY_TO_PANEL}" ]]; then
     fail "Katalog docelowy nie istnieje: ${PANEL_DIR}"
   else
     # Domyslna sciezka nie istnieje: maszyna bez cmp-app obok. Nie wywalamy builda,
-    # ale mowimy o tym glosno — cicha cisza byla wlasnie zrodlem rozjazdu artefaktu.
+    # ale mowimy o tym glosno - cicha cisza byla wlasnie zrodlem rozjazdu artefaktu.
     printf "  ${C_INFO}[UWAGA]${C_RST} Pominieto kopie do panelu: brak katalogu %s\n" "${PANEL_DIR}"
     printf "  ${C_INFO}       ${C_RST} Panel w cmp-app zostanie ze STARA paczka. Podaj --copy-to-panel\n"
     printf "  ${C_INFO}       ${C_RST} albo CMP_APP_PANEL_ZIP, jesli cmp-app stoi w innym miejscu.\n"
@@ -342,12 +342,12 @@ fi
 echo ""
 if [[ ${FAILURES} -eq 0 ]]; then
   ZIP_SIZE="$(du -h "${ZIP_PATH}" | cut -f1 | tr -d ' ')"
-  printf "${C_OK}BUILD OK${C_RST} — %s (%s), wersja %s\n" "${ZIP_PATH}" "${ZIP_SIZE}" "${PHP_VERSION}"
+  printf "${C_OK}BUILD OK${C_RST} - %s (%s), wersja %s\n" "${ZIP_PATH}" "${ZIP_SIZE}" "${PHP_VERSION}"
   echo ""
   echo "Zawartosc:"
   unzip -Z1 "${ZIP_PATH}" | sed 's/^/  /'
   exit 0
 else
-  printf "${C_ERR}BUILD NIEUDANY${C_RST} — ${FAILURES} bledow\n"
+  printf "${C_ERR}BUILD NIEUDANY${C_RST} - ${FAILURES} bledow\n"
   exit 1
 fi
