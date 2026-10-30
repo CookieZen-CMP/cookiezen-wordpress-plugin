@@ -4,7 +4,7 @@ Tags: cookie banner, cookie consent, cookie notice, GDPR, privacy
 Requires at least: 5.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.5-rc.2
+Stable tag: 1.0.5-rc.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,7 +74,7 @@ Yes, automatically. When the [WP Consent API](https://wordpress.org/plugins/wp-c
 
 = Does CookieZen work with PixelYourSite? =
 
-Yes, with no configuration. While a visitor has not given marketing consent, PixelYourSite's tracking scripts and pixels do not run in the browser, its server-side events (Conversions API) are not sent and its tracking cookies are not set. Code you add yourself in PixelYourSite's Head & Footer section is not covered. Once the visitor accepts, it starts on the same page, so the page where consent was given is measured too. If the visitor withdraws consent, server-side events stop right away and the cookies PixelYourSite set are removed; with PixelYourSite 11.4.3 or newer its browser tracking also stops on the same page, with older versions from the next page. Visitors outside the regions where you show the banner are measured as usual.
+Yes, with no configuration. While a visitor has not given marketing consent, PixelYourSite's tracking scripts and pixels do not run in the browser, its server-side events (Conversions API) are not sent and its tracking cookies are not set. Code you add yourself in PixelYourSite's Head & Footer section is not covered. Once the visitor accepts, it starts on the same page, so the page where consent was given is measured too. If the visitor withdraws consent, server-side events stop right away and the cookies PixelYourSite set are removed; with PixelYourSite 11.4.3 or newer its browser tracking also stops on the same page, with older versions from the next page. Visitors outside the regions where you show the banner are measured as usual. While your CookieZen subscription is inactive and the banner is not shown, the integration does not hold PixelYourSite back; only the first page load of each browser session sends no server-side events.
 
 To switch the integration off, return false from the `cookiezen_pys_integration` filter.
 
@@ -130,8 +130,8 @@ An equivalent entry is written to the browser's `localStorage` (`cmp:<site_key>`
 
 == Changelog ==
 
-= 1.0.5-rc.2 =
-* [Add] PixelYourSite integration: until the visitor gives marketing consent, PixelYourSite's tracking does not run in the browser, its server-side events (Conversions API) are not sent and its tracking cookies are not set; after consent it starts on the same page; after consent is withdrawn its cookies are removed and, with PixelYourSite 11.4.3 or newer, it stops on the same page.
+= 1.0.5-rc.3 =
+* [Add] PixelYourSite integration: until the visitor gives marketing consent, PixelYourSite's tracking does not run in the browser, its server-side events (Conversions API) are not sent and its tracking cookies are not set; after consent it starts on the same page; after consent is withdrawn its cookies are removed and, with PixelYourSite 11.4.3 or newer, it stops on the same page. While your CookieZen subscription is inactive, the integration does not hold PixelYourSite back.
 * [Add] The page cache of common caching plugins is cleared once after an update.
 * [Enhancement] The loader script is marked so that JavaScript optimizers do not defer or delay it.
 

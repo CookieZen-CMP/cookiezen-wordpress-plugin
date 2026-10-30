@@ -4,7 +4,7 @@ Tags: cookie banner, cookie consent, cookie notice, GDPR, privacy
 Requires at least: 5.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.5-rc.2
+Stable tag: 1.0.5-rc.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,7 +74,7 @@ Tak, automatycznie. Gdy wtyczka [WP Consent API](https://wordpress.org/plugins/w
 
 = Czy CookieZen współpracuje z PixelYourSite? =
 
-Tak, bez konfiguracji. Dopóki odwiedzający nie wyrazi zgody na marketing, skrypty śledzące i piksele PixelYourSite nie działają w przeglądarce, zdarzenia z serwera (Conversions API) nie są wysyłane, a ciasteczka śledzące nie są zapisywane. Kod, który sam dodasz w sekcji Head & Footer PixelYourSite, nie jest tym objęty. Po akceptacji startuje na tej samej stronie, więc strona, na której padła zgoda, też jest mierzona. Po wycofaniu zgody zdarzenia z serwera zatrzymują się od razu, a ciasteczka zapisane przez PixelYourSite są usuwane; od PixelYourSite 11.4.3 także śledzenie w przeglądarce milknie jeszcze na tej samej stronie, w starszych wersjach od następnej. Odwiedzający spoza regionów, w których pokazujesz baner, są mierzeni jak dotąd.
+Tak, bez konfiguracji. Dopóki odwiedzający nie wyrazi zgody na marketing, skrypty śledzące i piksele PixelYourSite nie działają w przeglądarce, zdarzenia z serwera (Conversions API) nie są wysyłane, a ciasteczka śledzące nie są zapisywane. Kod, który sam dodasz w sekcji Head & Footer PixelYourSite, nie jest tym objęty. Po akceptacji startuje na tej samej stronie, więc strona, na której padła zgoda, też jest mierzona. Po wycofaniu zgody zdarzenia z serwera zatrzymują się od razu, a ciasteczka zapisane przez PixelYourSite są usuwane; od PixelYourSite 11.4.3 także śledzenie w przeglądarce milknie jeszcze na tej samej stronie, w starszych wersjach od następnej. Odwiedzający spoza regionów, w których pokazujesz baner, są mierzeni jak dotąd. Gdy subskrypcja CookieZen jest nieaktywna i baner się nie wyświetla, integracja nie wstrzymuje PixelYourSite; tylko pierwsze wczytanie strony w każdej sesji przeglądarki nie wysyła zdarzeń z serwera.
 
 Integrację wyłączysz, zwracając false z filtra `cookiezen_pys_integration`.
 
@@ -130,8 +130,8 @@ Analogiczny wpis zapisywany jest w `localStorage` przeglądarki (`cmp:<site_key>
 
 == Changelog ==
 
-= 1.0.5-rc.2 =
-* [Add] Integracja z PixelYourSite: dopóki odwiedzający nie wyrazi zgody na marketing, śledzenie PixelYourSite nie działa w przeglądarce, zdarzenia z serwera (Conversions API) nie są wysyłane, a ciasteczka śledzące nie są zapisywane; po zgodzie startuje na tej samej stronie; po wycofaniu zgody jego ciasteczka są usuwane, a od PixelYourSite 11.4.3 milknie jeszcze na tej samej stronie.
+= 1.0.5-rc.3 =
+* [Add] Integracja z PixelYourSite: dopóki odwiedzający nie wyrazi zgody na marketing, śledzenie PixelYourSite nie działa w przeglądarce, zdarzenia z serwera (Conversions API) nie są wysyłane, a ciasteczka śledzące nie są zapisywane; po zgodzie startuje na tej samej stronie; po wycofaniu zgody jego ciasteczka są usuwane, a od PixelYourSite 11.4.3 milknie jeszcze na tej samej stronie. Przy nieaktywnej subskrypcji CookieZen integracja nie wstrzymuje PixelYourSite.
 * [Add] Jednorazowe czyszczenie page cache popularnych wtyczek po aktualizacji.
 * [Enhancement] Skrypt loadera jest oznaczony tak, żeby optymalizatory JavaScript go nie odraczały ani nie opóźniały.
 

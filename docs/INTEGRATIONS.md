@@ -16,17 +16,17 @@ Nazwa z wnętrza wymaga sprawdzenia w teście kontraktu na prawdziwej paczce dos
 Wzorem jest `tests/pys-contract.php`.
 
 **Stan zgody w przeglądarce tylko z pól przypiętych w cmp-app.**
-Wtyczka czyta handoff loadera `window.__CMP_LOADER` i zdarzenie banera `cookiezen:consent`, a pola, z których korzysta, przypinają testy w repo cmp-app: `tests/unit/wordpress-plugin-handoff-contract.test.ts` i `tests/unit/banner-consent-event-contract.test.ts`.
+Wtyczka czyta handoff loadera `window.__CMP_LOADER`, zdarzenie banera `cookiezen:consent` i znacznik wyłączonej strony `window.__CMP_DISABLED`, a pola, z których korzysta, przypinają testy w repo cmp-app: `tests/unit/wordpress-plugin-handoff-contract.test.ts` i `tests/unit/banner-consent-event-contract.test.ts`.
 Nowe pole czytane przez wtyczkę wymaga dopisania go do tych testów w tej samej parze zmian.
 Zmiana znaczenia istniejącego pola po stronie cmp-app jest zabroniona, bo wydanie wtyczki nie naprawia kopii zainstalowanych u klientów; nowe znaczenie dostaje nowe pole (reguła w cmp-app: `.claude/rules/runtime.md`).
 
 **Fail open jest regułą, fail closed wyjątkiem z decyzją.**
 Algorytm blokowania CookieZen przepuszcza to, czego nie zna.
-Integracja z PixelYourSite jest jedynym świadomym wyjątkiem: bez lustra decyzji serwer nie wysyła niczego do Meta.
+Integracja z PixelYourSite jest jedynym świadomym wyjątkiem: bez lustra decyzji serwer nie wysyła niczego do Meta, chyba że strona ma wyłączony CMP.
 Kolejny taki wyjątek wymaga decyzji właściciela i wpisu w repo cmp-app, w `docs/engineering/BLOCKING_ALGORITHM.md`, sekcja „Stan produkcyjny”.
 
 **Każda integracja z bramką dla cudzej wtyczki ma wyłącznik filtrem dla właściciela strony.**
-Wyłącznik jest domyślnie włączony, a zdalnego wyłącznika z panelu nie ma.
+Wyłącznik jest domyślnie włączony, a zdalnego wyłącznika integracji z panelu nie ma; wyłączenie CMP strony przez status subskrypcji otwiera tylko bramkę PixelYourSite (decyzja niżej).
 
 **Zmiana HTML wstawianego przez wtyczkę podnosi `COOKIEZEN_MARKUP_VERSION`.**
 Podniesienie jednorazowo czyści page cache u wszystkich klientów, którzy zaktualizują wtyczkę, więc tylko wtedy, gdy HTML naprawdę się zmienia.
@@ -47,7 +47,7 @@ Integracja ma trzy części, opisane w docblocku przy sekcji „Integracja z Pix
 | Warstwa | Co robi | Funkcje |
 |---|---|---|
 | Przeglądarka | skrypty PYS drukują się jako nieaktywne `text/plain`, a jeden bootstrap z `data-cmp-category="marketing"` ładuje je po kolei, gdy baner dostanie zgodę na marketing | `cookiezen_pys_script_loader_tag`, `cookiezen_pys_bootstrap_js` |
-| Lustro decyzji | skrypt zaraz za loaderem zapisuje sesyjne ciasteczko `cmp_pys_<site_key>` z handoffu i ze zdarzenia banera, steruje hakiem `window.pys_disable_event_filter` i bez zgody usuwa ciasteczka PYS i Meta | `cookiezen_pys_mirror_js` |
+| Lustro decyzji | skrypt zaraz za loaderem zapisuje sesyjne ciasteczko `cmp_pys_<site_key>` z handoffu i ze zdarzenia banera, steruje hakiem `window.pys_disable_event_filter` i bez zgody usuwa ciasteczka PYS i Meta; przy znaczniku wyłączonej strony sam uruchamia bootstrap | `cookiezen_pys_mirror_js` |
 | Serwer | filtry PYS, odpowiedź 403 na endpointy zdarzeń REST i AJAX, odpięcie haków zamówienia WooCommerce, wszystko rozstrzygane wyłącznie lustrem; do tego bezwarunkowe zdjęcie obrazka `<noscript>` | `cookiezen_pys_blocks` i funkcje pod komentarzem „Bramka PHP” |
 
 Integracja działa przy ustawionym kluczu strony, aktywnym PYS i niewyłączonym filtrze `cookiezen_pys_integration`.
@@ -63,7 +63,8 @@ Blokada w przeglądarce działa dodatkowo tylko wtedy, gdy loader wydrukował si
 | PHP czyta lustro, nie ciasteczko zgody | PHP nie zależy od formatu zapisu zgody, a reset wersji polityki, bramkę regionalną i zgodę trzymaną tylko w localStorage (Safari) rozstrzyga loader. Lustro jest sesyjne i odtwarzane przy każdej odsłonie, więc nie utrwala zwolnienia regionalnego jako zgody. |
 | Lustro zmienia się wyłącznie ze zdarzenia `cookiezen:consent` | Baner zapisuje `meta.granted` do bieżącego handoffu, który przy dwóch kluczach na stronie należy do innego przebiegu loadera. |
 | `SameSite=None` lustra na HTTPS | Powrót z bramki płatności przychodzi międzywitrynowym POST-em, z którym `Lax` nie dochodzi, a Purchase z PHP zostałby zablokowany osobie ze zgodą. |
-| Bez lustra serwer jest zamknięty (fail closed) | Endpointy zdarzeń PYS nie sprawdzają zgody, a CAPI OpenAI nie ma filtra wyłączającego. Skutek: strona, która usunie nasz loader, traci CAPI, dopóki właściciel nie wyłączy integracji filtrem. |
+| Bez lustra serwer jest zamknięty (fail closed) | Endpointy zdarzeń PYS nie sprawdzają zgody, a CAPI OpenAI nie ma filtra wyłączającego. Skutek: strona, która usunie nasz loader, traci CAPI, dopóki właściciel nie wyłączy integracji filtrem; brak handoffu przez awarię CDN albo bloker też zostawia bramkę zamkniętą. |
+| Strona z wyłączonym CMP przepuszcza PYS jak przed integracją | Bez banera nie da się udzielić zgody, więc zamknięta bramka wyłączałaby PYS całkowicie każdemu byłemu klientowi, który zostawił wtyczkę z kluczem, podczas gdy reszta skryptów jego strony działa swobodnie. Rozstrzyga jawny znacznik `window.__CMP_DISABLED[site_key]` z odpowiedzi loadera, nie sam brak handoffu, bo brak handoffu bywa też awarią; znacznik dostaje tylko odpowiedź 200 dla strony znalezionej w bazie z wyłączonym skryptem. |
 | Druga linia na serwerze obok filtra `pys_disable_server_event_filter` | 403 na trasach `pys-*/v1/event` i strażnik akcji AJAX na `admin_init` obejmują piksele bez własnego filtra oraz dodatki i Pro, które trzymają tę konwencję nazw. |
 | Filtry ciasteczek PYS tylko poza renderem HTML | Te filtry trafiają też do `pysOptions`, a wartość z renderu zamarzłaby w page cache dla wszystkich, także po zgodzie. |
 | Obrazek `<noscript>` zdejmowany bezwarunkowo | Bez JS baner nie działa i zgody nie da się udzielić, więc zdjęcie jest poprawne dla każdego odwiedzającego i bezpieczne dla page cache. |
@@ -97,6 +98,9 @@ Blokada w przeglądarce działa dodatkowo tylko wtedy, gdy loader wydrukował si
 - Zakupy z webhooków płatności w PYS Pro nie niosą ciasteczek przeglądarki, więc bramka je blokuje (utrata danych, tylko Pro).
 - Hosting z Varnishem, który obcina nieznane ciasteczka w żądaniach, zostawi PHP bez lustra, a bramka zablokuje CAPI wszystkim.
 - Page cache serwerowego bez wtyczki (Cloudflare APO, Varnish hostingu) wtyczka nie czyści; `readme.txt` każe zrobić to ręcznie po aktualizacji.
+- Strona usunięta z panelu dostaje od loadera 404 bez znacznika (ta sama odpowiedź obejmuje błąd zapytania do bazy), więc PYS zostaje na niej zamknięty, dopóki właściciel nie odinstaluje wtyczki albo nie wyłączy integracji filtrem.
+- Na stronie z wyłączonym CMP pierwsze żądanie HTML każdej sesji przeglądarki nie ma jeszcze lustra, więc PHP nie zakłada przy nim ciasteczek PYS i nie wysyła zdarzeń CAPI z renderu, a obrazek `<noscript>` Pixela dalej jest zdejmowany.
+- Gdy loader wyłączonego klucza wykona się przed loaderem innego, aktywnego klucza na tej samej stronie, lustro nie widzi jeszcze cudzego handoffu i przepuszcza PYS przed zgodą w tamtym banerze; przy odwrotnej kolejności PYS czeka na tamten baner.
 - PYS Pro: blokada w przeglądarce działa tak samo (ten sam uchwyt `pys`), ale filtrów PHP Pro nie potwierdziliśmy w kodzie, bo go nie mamy.
 
 ### Weryfikacja
@@ -106,7 +110,7 @@ Blokada w przeglądarce działa dodatkowo tylko wtedy, gdy loader wydrukował si
 - Uprząż `scripts/wordpress-pys-harness/` w repo cmp-app prowadzi prawdziwy Chrome przez scenariusze na WordPress Playground; przebieg i kontrola pozytywna są w nagłówku `run.ts`.
 - Canary na żywych sklepach według `PUBLISHING.md`, sekcja „Canary i wycofanie”.
 
-Sprawdzone przed wydaniem 1.0.5 (2026-10-30): kontrakt zielony na PYS 11.4.4; uprząż zielona na PYS 11.4.4 (PHP 7.4 i 8.x, także z emulacją opóźniania JS) i 11.1.2; canary 1.0.5-rc.2 zgodny na PYS 11.1.2, 11.4.2.1 i 11.4.4 z WP Rocket, LiteSpeed Cache i Cloudflare.
+Sprawdzone przed wydaniem 1.0.5 (2026-10-30): kontrakt zielony na PYS 11.4.4; uprząż zielona na PYS 11.4.4 (PHP 7.4 i 8.x, także z emulacją opóźniania JS) i 11.1.2, scenariusz strony z wyłączonym CMP na PYS 11.4.4 z PHP 8.3; canary 1.0.5-rc.2 zgodny na PYS 11.1.2, 11.4.2.1 i 11.4.4 z WP Rocket, LiteSpeed Cache i Cloudflare.
 
 ## WP Consent API (od 1.0.3)
 

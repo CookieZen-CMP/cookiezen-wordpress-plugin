@@ -3,7 +3,7 @@
  * Plugin Name: CookieZen
  * Plugin URI: https://cookiezen.pl/?utm_source=wordpress&utm_medium=plugin&utm_campaign=plugin_uri
  * Description: A consent management platform (CMP) for handling visitor consent. Automatic scanner, Google Consent Mode v2, full cookie banner customization and regulatory compliance in one place.
- * Version: 1.0.5-rc.2
+ * Version: 1.0.5-rc.3
  * Author: Semavo Solutions Sp. z o.o.
  * Author URI: https://cookiezen.pl
  * Requires at least: 5.5
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * pilnuje tego walidacja w scripts/build-wordpress-plugin.sh, bo naglowka nie da
  * sie odczytac na frontzie bez czytania pliku przy kazdym zadaniu.
  */
-define( 'COOKIEZEN_VERSION', '1.0.5-rc.2' );
+define( 'COOKIEZEN_VERSION', '1.0.5-rc.3' );
 
 /*
  * Nie wolamy `load_plugin_textdomain()`. Mechanizm just-in-time sam znajduje plik
@@ -217,7 +217,7 @@ function cookiezen_add_optimizer_attributes( $tag ) {
  *
  * 1. Przegladarka: skrypty PYS drukuja sie jako nieaktywne `text/plain`, a
  *    baner CookieZen uruchamia przy zgodzie na marketing jeden bootstrap, ktory
- *    laduje je po kolei. Bootstrap zamiast tagu na samym `pys-js`, bo klon
+ *    laduje je po kolei (na stronie z wylaczonym CMP uruchamia go lustro). Bootstrap zamiast tagu na samym `pys-js`, bo klon
  *    zewnetrznego skryptu wstawiony przez baner wykonuje sie asynchronicznie,
  *    a `public.js` od pierwszej linii potrzebuje `jQuery` i `pysOptions`, ktore
  *    optymalizatory potrafia opoznic do pierwszej interakcji.
@@ -229,9 +229,10 @@ function cookiezen_add_optimizer_attributes( $tag ) {
  *
  * Pola handoffu czytane przez lustro przypina test kontraktu w repo cmp-app
  * (`tests/unit/wordpress-plugin-handoff-contract.test.ts`), a pola zdarzenia
- * `tests/unit/banner-consent-event-contract.test.ts`; regula stanu
- * poczatkowego w `cookiezen_pys_mirror_js()` musi pozostac wierna kopia
- * `pluginMarketing` z pierwszego z nich.
+ * `tests/unit/banner-consent-event-contract.test.ts`. Pierwszy z nich przypina
+ * tez znacznik `window.__CMP_DISABLED` z odpowiedzi loadera strony z wylaczonym
+ * CMP, a regula stanu poczatkowego w `cookiezen_pys_mirror_js()` musi pozostac
+ * wierna kopia jego funkcji `pluginMarketing` i `pluginCmpDisabled`.
  *
  * Wylacznik dla wlasciciela strony: filtr `cookiezen_pys_integration` na false.
  * Usuniecie loadera przez `wp_dequeue_script( 'cookiezen-loader' )` zostawia
@@ -391,6 +392,14 @@ add_filter( 'script_loader_tag', 'cookiezen_pys_script_loader_tag', 10, 3 );
  * zwolnienie regionalne. Referencja do handoffu jest brana od razu, bo loader
  * innego klucza na tej samej stronie nadpisuje `window.__CMP_LOADER`.
  *
+ * Bez handoffu bramka jest zamknieta (awaria CDN, bloker), z jednym wyjatkiem:
+ * loader strony z wylaczonym CMP (na przyklad po wygasnieciu subskrypcji) ustawia
+ * `window.__CMP_DISABLED[site_key] = 1`, a na stronie nie ma handoffu zadnego
+ * innego klucza, ktorego baner moglby zebrac zgode. Strona nie ma wtedy banera, w ktorym
+ * da sie udzielic zgody, wiec lustro przepuszcza PYS jak przed integracja i samo
+ * uruchamia bootstrap. Znacznik i status 200 tej odpowiedzi przypina test
+ * kontraktu w repo cmp-app; odpowiedz 404 i blad bazy znacznika nie daja.
+ *
  * Zmiany wylacznie ze zdarzenia banera, wedlug tej samej reguly co natywna
  * zgoda TikToka i Pinteresta w loaderze: marketing przyznaje, sfinalizowany
  * brak marketingu odbiera, reszta nic nie zmienia. Nie z `meta.granted`, bo
@@ -428,17 +437,21 @@ function cookiezen_pys_mirror_js( $site_key ) {
         . 'var k=' . wp_json_encode( (string) $site_key ) . ',w=window,d=document,h=w.__CMP_LOADER,on=false,'
         . 'n="cmp_pys_"+k.replace(/[^A-Za-z0-9_-]/g,"");'
         . 'if(!h||h.siteKey!==k){h=null;}'
+        . 'var off=!w.__CMP_LOADER&&!!w.__CMP_DISABLED&&w.__CMP_DISABLED[k]===1;'
+        . 'function release(){try{var b=d.getElementById("cookiezen-pys-bootstrap"),s;if(!b||b.type!=="text/plain"){return;}'
+        . 's=d.createElement("script");if(b.nonce){s.nonce=b.nonce;}s.text=b.text;b.parentNode.replaceChild(s,b);}catch(e){}}'
         . 'function clear(){var c=d.cookie?d.cookie.split(";"):[],p=location.hostname.split("."),s=[""],i,j,m;'
         . 'for(j=p.length-2;j>=0;j--){s.push(";domain=."+p.slice(j).join("."));}'
         . 'for(i=0;i<c.length;i++){m=c[i].split("=")[0].replace(/^\s+|\s+$/g,"");'
         . 'if(/^(pys|last_pys)|^(pbid|_fbp|_fbc|__oppref)$/.test(m)){for(j=0;j<s.length;j++){d.cookie=m+"=;path=/;max-age=0"+s[j];}}}'
         . 'try{w.sessionStorage.removeItem("pys_session_entry_referrer");}catch(e){}}'
         . 'function set(v,keep){on=v;try{d.cookie=n+"="+(v?"1":"")+";path=/"+(v?"":";max-age=0")+(location.protocol==="https:"?";SameSite=None;Secure":";SameSite=Lax");if(!v&&!keep){clear();}}catch(e){}}'
-        . 'function start(){if(!h){return false;}if(h.meta){return !!h.meta.granted;}'
+        . 'function start(){if(off){return true;}if(!h){return false;}if(h.meta){return !!h.meta.granted;}'
         . 'var c=h.existingCategories;return !!(h.hasConsent&&c&&c.marketing)||!!(h.region&&h.region.exempt);}'
         . 'var prev=w.pys_disable_event_filter;'
         . 'w.pys_disable_event_filter=function(name,pixel){if(!on){return true;}return typeof prev==="function"?!!prev(name,pixel):false;};'
         . 'var s0=start();w.__cookiezenPysStart=s0;set(s0,!!(h&&h.region&&h.region.pending));'
+        . 'if(off){if(d.readyState==="loading"){d.addEventListener("DOMContentLoaded",release);}else{release();}}'
         . 'if(h){w.addEventListener("cookiezen:consent",function(e){'
         . 'var d=(e&&e.detail)||{};'
         . 'if(d.categories&&d.categories.marketing){set(true);}'
@@ -448,7 +461,7 @@ function cookiezen_pys_mirror_js( $site_key ) {
 }
 
 /**
- * Bootstrap uruchamiany przez baner. Kolejno:
+ * Bootstrap uruchamiany przez baner, a na stronie z wylaczonym CMP przez lustro. Kolejno:
  * - odroczenie o jedno zadanie, bo baner aktywuje skrypty przed wyslaniem
  *   `cookiezen:consent`, a lustro musi juz stac, zanim PYS cokolwiek wysle;
  * - wyzerowanie `pysPbidPrefetch`, gdy odslona startowala bez lustra: prefetch
@@ -592,7 +605,7 @@ add_action( 'wp_loaded', 'cookiezen_pys_unhook_session_orders' );
  * Licznik wersji znacznikow, ktore wtyczka wstawia do HTML. Podnosi sie go tylko
  * wtedy, gdy zmienia sie HTML strony, bo jego zmiana czysci page cache klientow.
  */
-define( 'COOKIEZEN_MARKUP_VERSION', '2' );
+define( 'COOKIEZEN_MARKUP_VERSION', '3' );
 
 /**
  * Jednorazowe czyszczenie page cache po zmianie znacznikow.
