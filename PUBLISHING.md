@@ -4,7 +4,7 @@
 
 | Miejsce | Rola | Co zawiera |
 |---|---|---|
-| To repo (`CookieZen-CMP/cookiezen-wordpress-plugin`) | źródło prawdy kodu wtyczki | `cookiezen.php`, `uninstall.php`, `readme.txt`, `LICENSE.txt`, `languages/`, `.wporg-assets/`, `scripts/`, `docs/` |
+| To repo (`CookieZen-CMP/cookiezen-wordpress-plugin`) | źródło prawdy kodu wtyczki | `cookiezen.php`, `uninstall.php`, `readme.txt`, `LICENSE.txt`, `languages/`, `.wporg-assets/`, `scripts/`, `docs/`, `tests/`, `CLAUDE.md` (poza paczką) |
 | SVN WordPress.org (`plugins.svn.wordpress.org/cookiezen`) | dystrybucja i automatyczna aktualizacja u klientów | `trunk/`, `tags/X.Y.Z/`, `assets/` |
 | Monorepo `cmp-app` | panel klienta, zakładka „Integracje" | `public/cookiezen.zip` |
 
@@ -140,6 +140,12 @@ Zmiana dotykająca jednej grafiki musi zostawić pozostałe bajt w bajt nietkni�
 Podbij metadane w tym repo: `Version:` w `cookiezen.php`, `Stable tag:` w `readme.txt` oraz wpis w sekcji `== Changelog ==`, opcjonalnie też w `== Upgrade Notice ==`.
 Build wymusza zgodność tych pól, więc rozjazd zatrzyma się lokalnie, a nie u recenzenta.
 
+Zmianę integracji z cudzą wtyczką albo HTML wstawianego do stron najpierw wydaj jako kandydata według sekcji „Canary i wycofanie”, a dopiero po nim przejdź przez kroki niżej.
+
+Przed buildem uruchom testy integracji z PixelYourSite: `php tests/pys-gate.php` (logika bramki na atrapach WordPressa) i `php tests/pys-contract.php <rozpakowany pixelyoursite>` na najnowszej wersji PixelYourSite z wordpress.org (sposób pobrania w nagłówku pliku).
+Drugi skrypt uruchamiaj też po każdym nowym wydaniu PixelYourSite, bo integracja zależy od kilku nazw z jego wnętrza, a ich zmiana po cichu wyłącza jedną warstwę bramki.
+Zachowanie na prawdziwym WordPressie sprawdza uprząż `scripts/wordpress-pys-harness/` w repo `cmp-app`.
+
 Zbuduj, zwaliduj i skopiuj paczkę do panelu jedną komendą:
 
 ```bash
@@ -163,6 +169,27 @@ svn ci -m "Tag X.Y.Z" --username cookiezen
 
 Sam bump pola `Tested up to`, bez zmian w kodzie, jest dozwolony przez [wytyczne katalogu](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/).
 Rób go po każdym większym wydaniu WordPressa, ale dopiero po smoke teście na tej wersji.
+
+## Canary i wycofanie
+
+Zmiana, która dotyka integracji z cudzą wtyczką albo HTML wstawianego do stron, trafia najpierw na kilka żywych sklepów jako kandydat `X.Y.Z-rc.N`.
+Smoke test i uprząż sprawdzają kod, ale nie kombinacje, które psują integrację u klientów: wersje cudzej wtyczki, optymalizatory JS i page cache.
+
+Kandydat ma `X.Y.Z-rc.N` we wszystkich polach wersji z sekcji wyżej, bo build odrzuca rozjazd, a ten stan nie trafia do SVN: `Stable tag` wskazujący nieistniejący tag zatrzymałby aktualizacje.
+Kandydat nie idzie też do panelu, więc build robisz z `--no-copy`, a ZIP z `dist/` instaluje właściciel strony przez Wtyczki → Dodaj → Wyślij na serwer i zastąpienie bieżącej wersji przesłaną.
+`version_compare` uznaje `X.Y.Z-rc.N` za starszą od `X.Y.Z`, więc strony z kandydatem dostaną potem zwykłą aktualizację z katalogu.
+
+Strony dobierz tak, żeby różniły się tym, co psuje integrację: wersją cudzej wtyczki i optymalizatorem (WP Rocket, LiteSpeed Cache, Cloudflare).
+Na każdej sprawdź w czystej przeglądarce sekwencję: pierwsza wizyta bez decyzji, zgoda bez przeładowania, powrót ze zgodą, wycofanie zgody, odmowa i następna odsłona po każdej z nich.
+Przy integracji z PixelYourSite sprawdzasz ładowanie skryptów i ciasteczka PixelYourSite i Meta, statusy odpowiedzi endpointów zdarzeń (403 bez zgody, 200 ze zgodą) i konsolę bez błędów.
+To żywe sklepy: klikasz wyłącznie baner, bez formularzy, koszyka i płatności, i nie wysyłasz do Meta syntetycznych zdarzeń.
+
+Wycofanie na stronie z kandydatem: wyłącznik integracji filtrem (dla PixelYourSite `add_filter( 'cookiezen_pys_integration', '__return_false' );` w motywie potomnym albo we wtyczce na fragmenty kodu) albo wgranie poprzedniej wersji tą samą drogą.
+Po wgraniu wersji sprzed 1.0.5 wyczyść page cache ręcznie, bo te wersje nie robią tego same.
+
+Po publikacji nie ma zdalnego wyłącznika ani wymuszenia aktualizacji.
+Przełącznik natywnej zgody Meta w panelu nie wyłącza integracji z PixelYourSite.
+Wycofaniem jest kolejne wydanie z integracją wyłączoną domyślnie, które dotrze tylko do stron aktualizujących wtyczki.
 
 ## Smoke test
 
@@ -192,7 +219,7 @@ Checklista:
 - [ ] Wstrzyknięcie: w źródle strony na froncie znacznik `script` z adresem loadera stoi w `head` po `meta charset` i `title`, a przed skryptami innych wtyczek.
 - [ ] Brak Site Key oznacza brak wstrzyknięcia: usuń klucz, zapisz, znacznik znika z `head`.
 - [ ] WP Consent API: przy aktywnej wtyczce [WP Consent API](https://wordpress.org/plugins/wp-consent-api/) loader ustawia `window.wp_consent_type` na `optin`, sprawdzalne w konsoli przeglądarki.
-- [ ] Deinstalacja: Wtyczki → Usuń, po czym `uninstall.php` czyści opcję `cookiezen_site_key`; bez dostępu do bazy sprawdzisz to pośrednio, bo po ponownej instalacji pole Site Key jest puste.
+- [ ] Deinstalacja: Wtyczki → Usuń, po czym `uninstall.php` czyści opcje `cookiezen_site_key`, `cookiezen_markup_version` i `cookiezen_purge_lock`; bez dostępu do bazy sprawdzisz to pośrednio, bo po ponownej instalacji pole Site Key jest puste.
 
 ## Odpowiedzi dla zespołu recenzji
 
@@ -218,7 +245,7 @@ Plugin Check reports this as WordPress.WP.EnqueuedResources.NonEnqueuedScript. W
 
 First, Google Consent Mode v2 default signals have to reach Google tags before gtag or Google Tag Manager initialises. Once a tag has initialised, the defaults arrive too late and the tag has already collected data without consent. Second, our loader sets window.wp_consent_type to "optin" for the WP Consent API. If any plugin that follows that standard reads the consent level before this value is set, the API reports consent as granted for every category, which is a fail-open exactly in the place a consent manager exists to prevent.
 
-wp_enqueue_script cannot give us that ordering. Enqueued scripts are printed together on wp_head at priority 9, ordered by their dependency graph, and a marketing plugin that enqueues its own tag can be printed before ours. We therefore hook wp_head at priority 1: after meta charset and title, which have to appear within the first 1024 bytes of head for correct HTML5 encoding detection, and before plugins hooked at priority 10 or later. The script is a single tag with no inline code, its URL is escaped with esc_url, and the same rationale is documented inline in cookiezen.php.
+wp_enqueue_script cannot give us that ordering. Enqueued scripts are printed together on wp_head at priority 9, ordered by their dependency graph, and a marketing plugin that enqueues its own tag can be printed before ours. We therefore hook wp_head at priority 1: after meta charset and title, which have to appear within the first 1024 bytes of head for correct HTML5 encoding detection, and before plugins hooked at priority 10 or later. The loader is a single tag whose URL is escaped with esc_url. When PixelYourSite is active, a short inline script follows it (the site key is passed through wp_json_encode) and mirrors the visitor's marketing decision into a session cookie, so that PixelYourSite's server-side events are sent only with consent. The same script answers PixelYourSite's `pys_disable_event_filter` browser hook from that decision and, without consent, removes the cookies PixelYourSite sets (`pys*`, `last_pys*`, `pbid`, `_fbp`, `_fbc`, `__oppref`) and its session referrer entry in sessionStorage; the same rationale is documented inline in cookiezen.php.
 ```
 
 ## Synchronizacja z panelem klienta
