@@ -6,10 +6,10 @@
 |---|---|---|
 | To repo (`CookieZen-CMP/cookiezen-wordpress-plugin`) | źródło prawdy kodu wtyczki | `cookiezen.php`, `uninstall.php`, `readme.txt`, `LICENSE.txt`, `languages/`, `.wporg-assets/`, `scripts/`, `docs/`, `tests/`, `CLAUDE.md` (poza paczką) |
 | SVN WordPress.org (`plugins.svn.wordpress.org/cookiezen`) | dystrybucja i automatyczna aktualizacja u klientów | `trunk/`, `tags/X.Y.Z/`, `assets/` |
-| Monorepo `cmp-app` | panel klienta, zakładka „Integracje" | `public/cookiezen.zip` |
+| Monorepo `cmp-app` | loader i baner CMP, test kontraktu i uprząż integracji wtyczki | żadnej paczki wtyczki: klient instaluje ją z katalogu WordPress.org |
 
 Kod wtyczki zmienia się wyłącznie tutaj.
-Stąd powstaje ZIP, który idzie do SVN oraz jako kopia do panelu klienta.
+Stąd powstaje ZIP, który idzie do SVN, a kandydat także do ręcznej instalacji na stronach canary.
 
 `docs/readme-pl.txt` to polski wzorzec redakcyjny treści karty katalogowej, a nie tłumaczenie do wgrania gdziekolwiek.
 `readme.txt` musi być po angielsku, a polską wersję strony wtyczki daje translate.wordpress.org.
@@ -43,7 +43,6 @@ Interfejsu wtyczki ten wymóg nie dotyczy, ale i tak trzymamy angielskie źród�
 **Pułapka: gotowe tłumaczenia nie wchodzą do paczki dystrybucyjnej.**
 Katalog WordPress.org generuje pliki `.po` i `.mo` z translate.wordpress.org i dostarcza je zwykłym kanałem aktualizacji tłumaczeń, więc te same pliki w pakiecie uznaje za zbędne; zespół recenzji zgłosił to nam 2026-09-21.
 Build kopiuje do `dist/` wyłącznie szablon `.pot`, a źródła tłumaczeń zostają w repo.
-Konsekwencja dotyczy paczki pobieranej z panelu CookieZen, bo ona nie ma kanału z translate.wordpress.org: do czasu wgrania tłumaczeń tam i uzyskania roli PTE polski klient zobaczy angielski interfejs wtyczki.
 
 Nie wołamy `load_plugin_textdomain()`, bo mechanizm just-in-time sam znajduje plik `.mo` bieżącej lokalizacji, zarówno w `wp-content/languages/plugins/`, gdzie kładzie go katalog, jak i w `languages/` wtyczki.
 Zmierzone 2026-09-20 na WordPressie 7.1.1 przez wgranie wariantu bez tego wywołania, po którym opis wtyczki i podpisy w ustawieniach pozostały polskie.
@@ -146,16 +145,13 @@ Przed buildem uruchom testy integracji z PixelYourSite: `php tests/pys-gate.php`
 Drugi skrypt uruchamiaj też po każdym nowym wydaniu PixelYourSite, bo integracja zależy od kilku nazw z jego wnętrza, a ich zmiana po cichu wyłącza jedną warstwę bramki.
 Zachowanie na prawdziwym WordPressie sprawdza uprząż `scripts/wordpress-pys-harness/` w repo `cmp-app`.
 
-Zbuduj, zwaliduj i skopiuj paczkę do panelu jedną komendą:
+Zbuduj i zwaliduj paczkę:
 
 ```bash
 ./scripts/build-wordpress-plugin.sh --validate-readme
 ```
 
-Kopia do `cmp-app/public/cookiezen.zip` jest domyślna, a skrypt szuka repo panelu obok tego katalogu.
-Gdy `cmp-app` stoi gdzie indziej, podaj `CMP_APP_PANEL_ZIP` albo `--copy-to-panel <ścieżka>`; gdy świadomie nie chcesz ruszać panelu, użyj `--no-copy`.
-
-Wykonaj smoke test zbudowanej paczki, potem zacommituj oba repozytoria ręcznie: to repo ze zmianami w źródle i `cmp-app` z odświeżonym `public/cookiezen.zip`.
+Wykonaj smoke test zbudowanej paczki, potem zacommituj to repo ręcznie.
 
 Na koniec zsynchronizuj SVN:
 
@@ -176,7 +172,7 @@ Zmiana, która dotyka integracji z cudzą wtyczką albo HTML wstawianego do stro
 Smoke test i uprząż sprawdzają kod, ale nie kombinacje, które psują integrację u klientów: wersje cudzej wtyczki, optymalizatory JS i page cache.
 
 Kandydat ma `X.Y.Z-rc.N` we wszystkich polach wersji z sekcji wyżej, bo build odrzuca rozjazd, a ten stan nie trafia do SVN: `Stable tag` wskazujący nieistniejący tag zatrzymałby aktualizacje.
-Kandydat nie idzie też do panelu, więc build robisz z `--no-copy`, a ZIP z `dist/` instaluje właściciel strony przez Wtyczki → Dodaj → Wyślij na serwer i zastąpienie bieżącej wersji przesłaną.
+ZIP kandydata z `dist/` instaluje właściciel strony przez Wtyczki → Dodaj → Wyślij na serwer i zastąpienie bieżącej wersji przesłaną.
 `version_compare` uznaje `X.Y.Z-rc.N` za starszą od `X.Y.Z`, więc strony z kandydatem dostaną potem zwykłą aktualizację z katalogu.
 
 Strony dobierz tak, żeby różniły się tym, co psuje integrację: wersją cudzej wtyczki i optymalizatorem (WP Rocket, LiteSpeed Cache, Cloudflare).
@@ -247,15 +243,3 @@ First, Google Consent Mode v2 default signals have to reach Google tags before g
 
 wp_enqueue_script cannot give us that ordering. Enqueued scripts are printed together on wp_head at priority 9, ordered by their dependency graph, and a marketing plugin that enqueues its own tag can be printed before ours. We therefore hook wp_head at priority 1: after meta charset and title, which have to appear within the first 1024 bytes of head for correct HTML5 encoding detection, and before plugins hooked at priority 10 or later. The loader is a single tag whose URL is escaped with esc_url. When PixelYourSite is active, a short inline script follows it (the site key is passed through wp_json_encode) and mirrors the visitor's marketing decision into a session cookie, so that PixelYourSite's server-side events are sent only with consent. The same script answers PixelYourSite's `pys_disable_event_filter` browser hook from that decision and, without consent, removes the cookies PixelYourSite sets (`pys*`, `last_pys*`, `pbid`, `_fbp`, `_fbc`, `__oppref`) and its session referrer entry in sessionStorage; the same rationale is documented inline in cookiezen.php.
 ```
-
-## Synchronizacja z panelem klienta
-
-Panel „Integracje" w `cmp-app` serwuje wtyczkę linkiem do `public/cookiezen.zip`; kod tej zakładki żyje w `components/dashboard/integration-manager.tsx`.
-
-Przejście na model statycznego artefaktu jest wykonane.
-`cmp-app` nie ma już katalogu `wordpress-plugin/` ani skryptu budującego paczkę, `package.json` nie odbudowuje jej przy `dev` ani `build`, a `public/cookiezen.zip` jest wersjonowany w gicie.
-Żadne uruchomienie serwera deweloperskiego nie nadpisze więc skopiowanej paczki.
-
-**Pułapka: pominięcie kopii do panelu nie zapala się nigdzie.**
-`public/cookiezen.zip` aktualizuje wyłącznie krok z sekcji o wydaniu nowej wersji, a commit w `cmp-app` robi się ręcznie.
-Pominięcie tego zostawia klientom w panelu poprzednią wersję wtyczki przy zielonym buildzie po obu stronach, bo nic tej zgodności nie sprawdza.
