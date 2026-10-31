@@ -11,7 +11,7 @@
 Kod wtyczki zmienia się wyłącznie tutaj.
 Stąd powstaje ZIP, który idzie do SVN, a kandydat także do ręcznej instalacji na stronach canary.
 
-`docs/readme-pl.txt` to polski wzorzec redakcyjny treści karty katalogowej, a nie tłumaczenie do wgrania gdziekolwiek.
+`docs/readme-pl.txt` to polski wzorzec redakcyjny treści karty katalogowej; nie wgrywa się go do SVN, a `scripts/build-translation-po.mjs` buduje z niego import tłumaczenia na translate.wordpress.org.
 `readme.txt` musi być po angielsku, a polską wersję strony wtyczki daje translate.wordpress.org.
 Wzorzec istnieje z tego samego powodu co `appstore/opis.md` dla Shopera: treść uzgadnia się po polsku, a panel po drugiej stronie nie ma historii zmian.
 
@@ -37,6 +37,7 @@ Korespondencja od zespołu recenzji przychodzi z `plugins@wordpress.org`.
 Zespół wtyczek ogłosił ten wymóg 2025-07-28 wpisem „Requiring the README to be written in English", a powodem jest to, że angielski jest językiem roboczym recenzji.
 Polska wersja karty nie powstaje przez drugi plik, tylko przez tłumaczenie na translate.wordpress.org.
 Projekty tłumaczeń zakłada się po zatwierdzeniu wtyczki, a własne tłumaczenia zatwierdza się samodzielnie po uzyskaniu roli PTE dla swojej wtyczki.
+Konto `cookiezen` ma rolę PTE dla pl_PL w projekcie CookieZen od 2026-09-23; procedura tłumaczenia przy każdym wydaniu jest w sekcji „Tłumaczenie po wydaniu”.
 
 Interfejsu wtyczki ten wymóg nie dotyczy, ale i tak trzymamy angielskie źródła w `__()`, a polskie tłumaczenie w `languages/` tego repo.
 
@@ -153,7 +154,7 @@ Zbuduj i zwaliduj paczkę:
 
 Wykonaj smoke test zbudowanej paczki, potem zacommituj to repo ręcznie.
 
-Na koniec zsynchronizuj SVN:
+Na koniec zsynchronizuj SVN, a po publikacji przejdź do sekcji „Tłumaczenie po wydaniu”:
 
 ```bash
 cd cookiezen-svn
@@ -165,6 +166,32 @@ svn ci -m "Tag X.Y.Z" --username cookiezen
 
 Sam bump pola `Tested up to`, bez zmian w kodzie, jest dozwolony przez [wytyczne katalogu](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/).
 Rób go po każdym większym wydaniu WordPressa, ale dopiero po smoke teście na tej wersji.
+
+## Tłumaczenie po wydaniu
+
+Każda zmiana `readme.txt` albo tekstów w `__()` dodaje na translate.wordpress.org nowe oryginały, więc polska strona wtyczki i polski interfejs wracają do angielskiego, dopóki ktoś ich nie przetłumaczy.
+Źródłem polskich tekstów są `docs/readme-pl.txt` (opis) i `languages/cookiezen-pl_PL.po` (interfejs), więc przy wydaniu podbij je razem z angielskimi odpowiednikami.
+
+Pliki do importu buduje jedna komenda:
+
+```bash
+node scripts/build-translation-po.mjs
+```
+
+Skrypt pobiera bieżące oryginały czterech projektów, wypełnia je polskimi tekstami i zapisuje w `dist/tlumaczenia/` po jednym pliku na projekt: `cookiezen-stable-pl.po` dla Stable (latest release), `cookiezen-dev-pl.po` dla Development (trunk), `cookiezen-stable-readme-pl.po` dla Stable Readme i `cookiezen-dev-readme-pl.po` dla Development Readme.
+Build wtyczki czyści cały `dist/`, więc skrypt uruchamiaj po buildzie i importuj pliki od razu.
+Opis paruje z `readme.txt` jednostka w jednostkę, więc oba pliki readme muszą mieć tę samą kolejność nagłówków, akapitów i punktów list; przy rozjeździe skrypt pokazuje pierwszą różnicę i niczego nie zapisuje, bo przesunięte pary trafiłyby do importu jako zatwierdzone.
+Kodem 1 z listą do sprawdzenia kończą się też: oryginał bez tłumaczenia, tłumaczenie identyczne z oryginałem i tekst z repo, którego eksport nie zawiera, czyli zwykle projekt readme jeszcze nieodświeżony po wydaniu.
+
+Import robi człowiek zalogowany na konto `cookiezen`: w każdym z czterech projektów polskiego tłumaczenia „Import Translations”, plik tego projektu, Format: Auto Detect, Status: Current (formularz z 2026-10-31).
+
+**Pułapka: projekt readme odświeża się z opóźnieniem po wydaniu.**
+Przez pewien czas po publikacji w SVN Stable Readme ma jeszcze oryginały poprzedniej wersji, choć strona wtyczki pokazuje już nowy opis; skrypt uruchamiaj dopiero, gdy na stronie tłumaczenia przybędzie oryginałów albo pojawią się nowe teksty.
+
+**Pułapka: tekst z różnicą w adresie trafia do „Waiting” mimo roli PTE.**
+GlotPress porównuje adresy w oryginale i tłumaczeniu, a tłumaczenie przykładowego adresu (`YOUR_SITE_KEY` → `TWOJ_SITE_KEY`) daje ostrzeżenie; taki tekst zatwierdza się ręcznie przyciskiem Approve z odrzuceniem ostrzeżenia, osobno w Stable Readme i w Development Readme.
+
+Według komunikatu na stronie projektu tłumaczeń (odczyt 2026-10-31) tłumaczenie opisu jest publikowane niemal od razu, a pierwsza paczka językowa interfejsu powstaje, gdy projekt Stable przekroczy 90%.
 
 ## Canary i wycofanie
 

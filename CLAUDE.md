@@ -10,7 +10,7 @@ Dokumentacja i komentarze są po polsku, identyfikatory po angielsku; komentarze
 - `uninstall.php`: usuwa opcje wtyczki; nowa opcja trafia tutaj i do checklisty smoke testu w `PUBLISHING.md`.
 - `readme.txt`: karta w katalogu WordPress.org, po angielsku; `docs/readme-pl.txt` to polski wzorzec tej treści.
 - `docs/INTEGRATIONS.md`: decyzje, odrzucone warianty, ograniczenia i weryfikacja integracji z cudzymi wtyczkami.
-- `PUBLISHING.md`: model repozytoriów, wydanie wersji, canary i wycofanie, smoke test, SVN WordPress.org.
+- `PUBLISHING.md`: model repozytoriów, wydanie wersji, canary i wycofanie, tłumaczenie po wydaniu, smoke test, SVN WordPress.org.
 - `scripts/build-wordpress-plugin.sh`: build do `dist/` z listą plików wpisaną w skrypt; plik spoza niej nie trafia do paczki.
 - `tests/`: skrypty PHP poza paczką.
 
@@ -20,6 +20,7 @@ Dokumentacja i komentarze są po polsku, identyfikatory po angielsku; komentarze
 php tests/pys-gate.php                                      # logika bramki PixelYourSite na atrapach WordPressa
 php tests/pys-contract.php <rozpakowany pixelyoursite>      # nazwy z wnętrza PixelYourSite na prawdziwej paczce
 ./scripts/build-wordpress-plugin.sh --validate-readme
+node scripts/build-translation-po.mjs                       # pliki .po z polskim tłumaczeniem do importu na translate.wordpress.org
 ```
 
 Build zapisuje paczkę wyłącznie do `dist/`: panel CookieZen nie serwuje wtyczki, klienci instalują ją z katalogu WordPress.org.
