@@ -1,6 +1,6 @@
 === CookieZen ===
 Contributors: cookiezen
-Tags: cookie banner, cookie consent, cookie notice, GDPR, privacy
+Tags: cookie banner, cookie consent, GDPR, google consent mode, cookie notice
 Requires at least: 5.5
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -14,7 +14,7 @@ Cookie consent banner and GDPR consent platform with Google Consent Mode v2, an 
 
 CookieZen manages the consent of everyone who visits your site, sends the full set of Consent Mode signals to Google and Microsoft, scans your pages for cookies and stores every consent decision in case of an audit. Setting it up takes a few minutes.
 
-The plugin connects your site to a CookieZen account with a single key (Site Key). All of the logic, meaning the cookie scanner, tracker classification, Consent Mode signals, the consent register and the statistics, runs on the CookieZen service, so the plugin itself stays small. You change the look and the wording of the banner in the panel, without touching your theme and without pasting anything into your templates.
+The plugin connects your site to a CookieZen account. All of the logic, meaning the cookie scanner, tracker classification, Consent Mode signals, the consent register and the statistics, runs on the CookieZen service, so the plugin itself stays small. You change the look and the wording of the banner in the panel, without touching your theme and without pasting anything into your template code.
 
 = What makes CookieZen different =
 
@@ -28,7 +28,10 @@ Every required signal reaches Google tags before they start collecting data. url
 Consent Mode for Microsoft Universal Event Tracking (UET) is supported, so paid campaigns in Microsoft Advertising measure conversions in line with the visitor's decision. The correct consent signal is passed to Microsoft Clarity too. There is nothing to connect and no code to add by hand.
 
 **WP Consent API integration**
-The WP Consent API plugin does not collect consent itself, it only exposes it to other plugins, so without a consent manager feeding it, plugins that follow the standard behave as if consent had been granted. CookieZen takes that role automatically: the visitor's decision reaches compatible plugins such as WooCommerce, Google Site Kit, WP Statistics or Pixel Manager, both in JavaScript and in PHP code. There is nothing to switch on.
+The WP Consent API plugin does not collect consent itself, it only exposes it to other plugins, so without a consent manager feeding it, plugins that follow the standard behave as if consent had been granted. CookieZen takes that role automatically: the visitor's decision reaches compatible plugins such as WooCommerce, Google Site Kit, WP Statistics or Pixel Manager, both in JavaScript and in PHP code.
+
+**Meta Pixel and Conversions API from PixelYourSite wait for consent**
+If you use PixelYourSite, CookieZen holds its pixels, its server-side events (Conversions API) and its tracking cookies until the visitor gives marketing consent, with no configuration.
 
 **Consent records and statistics**
 Every decision is stored with its date, time, country and language, which gives you proof of consent in case of an audit. IP addresses are irreversibly hashed, so no personal data about the people visiting your site is kept. The panel also shows your consent acceptance rate, meaning how much of your traffic actually reaches your analytics and your ads.
@@ -54,7 +57,7 @@ The banner appears on every page of the site and does not require adding anythin
 
 = How to check that it works =
 
-Open your site in a private browser window. The banner should appear on the first visit, and once you make a choice it should disappear and stay away on the following page views. The decision shows up in the statistics in the CookieZen panel within a few minutes.
+Open your site in a private browser window. The cookie banner should appear on the first visit, and once you make a choice it should disappear and stay away on the following page views. The decision shows up in the statistics in the CookieZen panel within a few minutes.
 
 If the banner does not appear, check that the Site Key is saved in the plugin settings and make sure the domain added in the CookieZen panel matches the address of your site.
 
@@ -68,25 +71,21 @@ The Site Key is in the CookieZen panel, in the Integration tab of your domain. C
 
 Yes, the plugin is free. It needs an account in the CookieZen service, which has a permanent Free plan for up to 1,000 sessions per month. Higher plans raise the session limit.
 
-= Does CookieZen work with the WP Consent API? =
+= Can I try CookieZen for free? =
 
-Yes, automatically. When the [WP Consent API](https://wordpress.org/plugins/wp-consent-api/) plugin is active, CookieZen acts as the consent manager and passes the visitor's decision to compatible plugins, including the checks made in PHP. There is nothing to configure.
+Yes. After signing up you get 14 days of the full service, with no card details required. After that you choose a paid plan or switch to the permanent Free plan for sites with up to 1,000 sessions per month.
 
-= Does CookieZen work with PixelYourSite? =
+= Can I use one account for several sites? =
 
-Yes, with no configuration. While a visitor has not given marketing consent, PixelYourSite's tracking scripts and pixels do not run in the browser, its server-side events (Conversions API) are not sent and its tracking cookies are not set. Code you add yourself in PixelYourSite's Head & Footer section is not covered. Once the visitor accepts, it starts on the same page, so the page where consent was given is measured too. If the visitor withdraws consent, server-side events stop right away and the cookies PixelYourSite set are removed; with PixelYourSite 11.4.3 or newer its browser tracking also stops on the same page, with older versions from the next page. Visitors outside the regions where you show the banner are measured as usual. While your CookieZen subscription is inactive and the banner is not shown, the integration does not hold PixelYourSite back; only the first page load of each browser session sends no server-side events.
+Yes. One account and one plan cover several sites, without separate accounts and separate fees, and the plan's session limit is shared by all of them. On each site you install the plugin and paste the Site Key of that domain.
 
-To switch the integration off, return false from the `cookiezen_pys_integration` filter.
+= What is Google Consent Mode v2 and do I need it? =
 
-After an update the plugin clears the page cache of common caching plugins once (LiteSpeed Cache, WP Rocket, W3 Total Cache, WP Super Cache, SiteGround Optimizer, Nginx Helper, Breeze, WP Fastest Cache). If your host or CDN caches whole pages (for example Cloudflare APO or Varnish), clear that cache yourself after updating.
+Google Consent Mode v2 tells Google tags whether a visitor agreed to analytics and advertising cookies. Google requires these signals for visitors from the European Economic Area if you want to keep using personalised advertising and conversion measurement in Google Ads. CookieZen sends all of them automatically, before Google tags start, so there is nothing to set up in Google Tag Manager or in your gtag code.
 
-= Does the plugin work without an internet connection? =
+= Does CookieZen support Microsoft Advertising (UET) and Clarity? =
 
-No. CookieZen is a service, a consent management platform. The banner, the cookie classification and the consent register rely on CookieZen servers, so an active account and a network connection are required.
-
-= Can I change how the banner looks and what it says? =
-
-Yes, entirely from the CookieZen panel. You can change the colors, the logo, the layout, the wording and your own CSS. The changes reach your site without updating the plugin.
+Yes, automatically. CookieZen sends the consent signals to Microsoft Universal Event Tracking (UET) and to Microsoft Clarity, so your Microsoft Advertising campaigns measure conversions in line with the visitor's decision. There is no code to add and nothing to connect.
 
 = Does installing the plugin make my site GDPR compliant? =
 
@@ -94,39 +93,59 @@ No. Installing it is the first step. Compliance depends on configuring the banne
 
 Scripts that are meant to wait for consent also have to be marked in your page code or gated by consent in your tag manager. The CookieZen documentation covers this.
 
+= Will CookieZen slow down my site? =
+
+The script that has to run first is small and lightweight. It runs before the rest of the page because it has to reach Google tags before they start. The full banner loads asynchronously, so your page does not wait for it. The plugin adds no database tables and on each page view reads only its own settings.
+
+= Does CookieZen work with WooCommerce and caching plugins? =
+
+Yes. The banner works on every page of your shop, including the cart and the checkout. When the WP Consent API plugin is active, WooCommerce features that follow that standard respect the visitor's decision.
+
+The loader is marked so that optimizers such as WP Rocket, LiteSpeed Cache and Cloudflare Rocket Loader do not delay it, and after an update the plugin clears the page cache of common caching plugins once. If your host or CDN caches whole pages (for example Cloudflare APO), clear that cache yourself after updating.
+
+= Does CookieZen work with the WP Consent API? =
+
+Yes, automatically. When the [WP Consent API](https://wordpress.org/plugins/wp-consent-api/) plugin is active, CookieZen acts as the consent manager and passes the visitor's decision to compatible plugins, including the checks made in PHP. It needs no extra configuration.
+
+= Does CookieZen work with PixelYourSite? =
+
+Yes, with no configuration: PixelYourSite waits for marketing consent in the browser and on the server. Code you add yourself in PixelYourSite's Head & Footer section is not covered. With PixelYourSite 11.4.3 or newer, withdrawing consent stops its tracking on the same page, with older versions from the next page. Visitors outside the regions where you show the banner are measured as usual. While your CookieZen subscription is inactive and the banner is not shown, the integration does not hold PixelYourSite back.
+
+= Can visitors change their decision later? =
+
+Yes. After the first decision, a small button in the corner of the page opens the cookie settings again. You can move it to the other corner or hide it in the CookieZen panel; if you hide it, add a link to `#cookiezen-settings` on your site, for example in the footer, so that visitors can still change their choice.
+
+= Is the banner available in other languages? =
+
+Yes. You add the languages you need in the panel, with ready-made texts in 27 languages that you can edit. The banner shows the language set on the page, as long as you have added that language in the panel, and otherwise your default language, so it also follows multilingual plugins that switch the page language.
+
+= Can I change how the banner looks and what it says? =
+
+Yes, entirely from the CookieZen panel. You can change the colors, the logo, the layout, the wording and your own CSS. The changes reach your site without updating the plugin.
+
+= What cookies does CookieZen set? =
+
+The visitor's choice is stored in the `cmp_consent_<site_key>` cookie for one year, with an equivalent entry in the browser's localStorage. It holds the choice and a random consent ID, with no name, e-mail address or IP address.
+
+On sites with PixelYourSite the plugin also sets `cmp_pys_<site_key>`, a session cookie that tells the server whether PixelYourSite may send server-side events. It contains no personal data and is removed when the browser session ends or when consent is withdrawn.
+
+CookieZen also keeps a few small technical entries in the browser's localStorage and sessionStorage, for example to count sessions or, if you show the banner only in selected regions, to remember the visitor's country during a visit. When the WP Consent API plugin is active, that plugin also stores the visitor's choice in its own cookies.
+
+= What exactly does the plugin load and send? =
+
+The plugin adds one loader script to your pages, from `https://cz-cdn.com/api/cmp/loader?site_key=YOUR_SITE_KEY`. It loads on every visit, because the banner has to start and pass the consent signals before your analytics and marketing tools do.
+
+The request carries your Site Key, which identifies your site in CookieZen, and the standard request headers of the visitor's browser (IP address, User-Agent, Referer) that are needed to deliver the script. IP addresses are irreversibly hashed on the CookieZen side and are not stored in a form that allows identification. The cookie scanner, tracker classification, geolocation for different legal frameworks, Google Consent Mode signals and the consent register all run on the CookieZen service.
+
+= Does the plugin work without an internet connection? =
+
+No. CookieZen is a service, a consent management platform. The banner, the cookie classification and the consent register rely on CookieZen servers, so an active account and a network connection are required.
+
 == External services ==
 
-This plugin connects your site to the CookieZen service in order to deliver the consent banner and manage the consent of your visitors. Without that connection the banner cannot work, because CookieZen is a consent management platform delivered as a service.
+CookieZen is a consent management platform delivered as a service. The plugin connects your site to the CookieZen service at cz-cdn.com to show the consent banner and record your visitors' consent; without that connection the banner cannot work. On every visit it sends your Site Key and the standard request headers of the visitor's browser (IP address, User-Agent, Referer), and IP addresses are irreversibly hashed on the CookieZen side. The FAQ describes it in more detail.
 
-**What the connection is**
-
-The plugin inserts a loader script on your site from this address:
-
-`https://cz-cdn.com/api/cmp/loader?site_key=YOUR_SITE_KEY`
-
-The script loads on every visit, because the banner has to initialise and pass the consent signals before your analytics and marketing tools start.
-
-**What data is sent**
-
-* The Site Key, which is the identifier of your site in the CookieZen system, entered by you in the plugin settings.
-* The standard HTTP request headers of the visitor's browser (IP address, User-Agent, Referer), needed to deliver the script. IP addresses are irreversibly hashed on the CookieZen side and are not stored in a form that allows identification.
-
-**Why the external service is required**
-
-All of the platform logic, meaning the automatic cookie scanner, tracker classification, geolocation for different legal frameworks, Google Consent Mode v2 signals and the register of consent records, runs on the CookieZen backend.
-
-The service is provided by Semavo Solutions Sp. z o.o.
-Privacy policy: https://cookiezen.pl/polityka-prywatnosci
-Cookie policy: https://cookiezen.pl/polityka-cookies
-Terms of service: https://cookiezen.pl/regulamin
-
-== Cookies set by CookieZen ==
-
-The plugin sets the cookie `cmp_consent_<site_key>`, which stores the visitor's choice across the analytics, marketing and preferences categories. The cookie lasts one year and contains no personal data.
-
-On sites with PixelYourSite the plugin also sets `cmp_pys_<site_key>`, a session cookie that copies the visitor's current marketing decision for the server, so that PixelYourSite sends server-side events only with consent. It contains no personal data and is removed when the browser session ends or when consent is withdrawn.
-
-An equivalent entry is written to the browser's `localStorage` (`cmp:<site_key>`).
+The service is provided by Semavo Solutions Sp. z o.o.: [Privacy policy](https://cookiezen.pl/polityka-prywatnosci), [Cookie policy](https://cookiezen.pl/polityka-cookies), [Terms of service](https://cookiezen.pl/regulamin).
 
 == Changelog ==
 
