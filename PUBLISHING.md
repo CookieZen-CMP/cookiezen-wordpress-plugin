@@ -203,7 +203,9 @@ Zespół recenzji zgłosił nam to 2026-09-21 jako błąd blokujący; build od t
 
 Przed każdym zgłoszeniem uruchom wtyczkę [Plugin Check](https://wordpress.org/plugins/plugin-check/) na środowisku testowym, w Narzędzia → Sprawdź wtyczkę.
 Formularz zgłoszeniowy wymaga potwierdzenia, że jej uwagi są rozwiązane poza tymi, które uznajesz za fałszywe trafienia.
-Nasze stałe odstępstwo to `NonEnqueuedScript`, opisane w sekcji o odpowiedziach dla recenzji; wklej tamto uzasadnienie do pola „Additional Information" przy zgłoszeniu.
+Plugin Check dla 1.0.5 (2026-10-31) nie zgłasza już `NonEnqueuedScript`; tekst o synchronicznym loaderze w sekcji o odpowiedziach dla recenzji zostaje na wypadek pytania recenzenta, ale jego pierwsze zdanie trzeba wtedy dopasować do bieżącego wyniku.
+Świadome wyjątki od reguł Plugin Check są oznaczone w `cookiezen.php` komentarzem `phpcs:ignore` z powodem po angielsku, czytelnym dla recenzji: `NonceVerification.Recommended` w strażniku AJAX, który wyłącznie odrzuca anonimowe zapytania zdarzeń PixelYourSite, oraz `NonPrefixedHooknameFound` przy publicznych hakach czyszczenia cache LiteSpeed Cache, Nginx Helper i Breeze, które trzeba wołać pod ich nazwami.
+Nowy wyjątek dostaje taki sam komentarz z powodem, a nie ciche wyłączenie reguły dla całego pliku.
 
 Testowa instalacja ma podpięty żywy Site Key, więc kliknięcie w baner podczas testu dopisuje prawdziwy rekord zgody do statystyk tej witryny w produkcji.
 

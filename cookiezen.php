@@ -550,9 +550,11 @@ add_filter( 'rest_pre_dispatch', 'cookiezen_pys_filter_rest_pre_dispatch', 10, 3
  */
 function cookiezen_pys_ajax_guard() {
     $admin_post = isset( $GLOBALS['pagenow'] ) && 'admin-post.php' === $GLOBALS['pagenow'];
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check that only rejects PixelYourSite event requests sent by anonymous visitors; nothing is saved or changed.
     if ( ! ( wp_doing_ajax() || $admin_post ) || ! isset( $_REQUEST['action'] ) || ! is_string( $_REQUEST['action'] ) ) {
         return;
     }
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Same read-only rejection; the action name is sanitized and only compared against PixelYourSite event actions.
     if ( cookiezen_pys_is_event_action( sanitize_key( wp_unslash( $_REQUEST['action'] ) ) ) && cookiezen_pys_blocks() ) {
         wp_send_json_error( array( 'message' => 'No marketing consent.' ), 403 );
     }
@@ -645,6 +647,7 @@ add_action( 'init', 'cookiezen_maybe_purge_cache_after_update' );
 
 function cookiezen_purge_page_caches() {
     if ( has_action( 'litespeed_purge_all' ) ) {
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Public purge hook of LiteSpeed Cache, called by its own name.
         do_action( 'litespeed_purge_all' );
     }
     if ( function_exists( 'rocket_clean_domain' ) ) {
@@ -660,9 +663,11 @@ function cookiezen_purge_page_caches() {
         sg_cachepress_purge_cache();
     }
     if ( has_action( 'rt_nginx_helper_purge_all' ) ) {
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Public purge hook of Nginx Helper, called by its own name.
         do_action( 'rt_nginx_helper_purge_all' );
     }
     if ( has_action( 'breeze_clear_all_cache' ) ) {
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Public purge hook of Breeze, called by its own name.
         do_action( 'breeze_clear_all_cache' );
     }
     if ( function_exists( 'wpfc_clear_all_cache' ) ) {
